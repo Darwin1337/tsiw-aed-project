@@ -1,0 +1,22 @@
+Verificações no registo de um novo utilizador:
+	- [Campo de Nome] - Se a string está vazia;
+	- [Campo de Nome] - Se a string tem pelo menos um espaço branco (para o primeiro e último nome ser obrigatório);
+	- [Campo de Nome] - Se tanto o primeiro como o último nome têm, pelo menos, 3 caracteres cada;
+	- [Campo de Nome] - Se a string contém caracteres especiais ou números (por via de uma expressão regular);
+	- [Campo de Nome] - Se o primeiro e último nome juntos (sem espaços brancos) ultrapassam os 55 caracteres;
+	- [Campo de E-mail] - Se o e-mail corresponde à expressão regular definida para validação de e-mail;
+	- [Campo de E-mail] - nome_de_utilizador@domínio > Se o nome de utilizador não ultrapassa os 64 caracteres (regra geral de e-mails);
+	- [Campo de E-mail] - nome_de_utilizador@domínio > Se o domínio não ultrapassa os 255 caracteres (regra geral de e-mails);
+	- [Campo de Palavra-Passe] - Se a palavra-passe tem, pelo menos, 8 caracteres;
+	- [Registo] - Se o e-mail introduzido já se encontra registado na plataforma.
+
+Verificações no início de sessão de um utilizador:
+	- [Campo de E-mail] - Se o e-mail corresponde à expressão regular definida para validação de e-mail;
+	- [Campo de E-mail] - nome_de_utilizador@domínio > Se o nome de utilizador não ultrapassa os 64 caracteres (regra geral de e-mails);
+	- [Campo de E-mail] - nome_de_utilizador@domínio > Se o domínio não ultrapassa os 255 caracteres (regra geral de e-mails);
+	- [Campo de Palavra-Passe] - Se a palavra-passe tem, pelo menos, 8 caracteres;
+	- [Início de Sessão] - Se o ficheiro de texto dos utilizadores existe;
+	- [Início de Sessão] - Se o e-mail introduzido existe no ficheiro de texto;
+	- [Início de Sessão] - Se a palavra-passe introduzida coincide com a registada no ficheiro de texto.
+
+

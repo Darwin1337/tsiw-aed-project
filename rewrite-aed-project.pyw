@@ -73,6 +73,10 @@ class MainProgram:
         self.newWindow = Toplevel(self.master)
         self.app = Login(self.newWindow)
 
+    def MainProgramPanel(self, info):
+        self.randomLabel = Label(self.master, text = app.loggedInUserInformation[1])
+        self.randomLabel.place(x = 115, rely = 0.20, anchor = E)
+
 class Login:
     def __init__(self, master):
         # [Initial configuration]
@@ -146,6 +150,11 @@ class Login:
                                                 if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]: self.loggedInSucessInfo += "\nTipo: utilizador"
                                                 else: self.loggedInSucessInfo += "\nTipo: admin"
                                                 messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\n\nBem-vindo!" + self.loggedInSucessInfo)
+                                                # Close login window and open main program back up
+                                                self.master.destroy()
+                                                app.master.update()
+                                                app.master.deiconify()
+                                                app.MainProgramPanel(app.loggedInUserInformation)
                                             else: messagebox.showerror("Erro", "A palavra-passe introduzida está incorreta")
                                 if not self.wasAccountFound: messagebox.showerror("Erro", "O e-mail introduzido não foi encontrado")
                             else: messagebox.showerror("Erro", "As informações inseridas não foram encontradas")

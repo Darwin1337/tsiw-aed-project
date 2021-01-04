@@ -4,6 +4,7 @@ import re # Usado para verificar certos campos (e-mail, nome, etc.) com express�
 import cryptocode # Usado para encriptar informações gerais (primeiros e últimos nomes)
 import hashlib # Usado para encriptar informações confidenciais (e-mails e passwords) com a função SHA256
 import shutil # Usado para copiar ficheiros de um directório para outro
+import traceback # Usado para facilitar o debugging
 from tkinter import *
 from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
@@ -11,9 +12,6 @@ from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # pip install PySide2
 # pip install cryptocode
-
-# TODO:
-# Adicionar tipo de utilizador (admin e user).
 
 def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data"): os.mkdir(os.getcwd() + "\\data")
@@ -85,7 +83,7 @@ def RegisterUser(event):
                                                 if os.path.exists(os.getcwd() + "\\data\\user\\users_info.txt"):
                                                     with open(os.getcwd() + "\\data\\user\\users_info.txt", "r") as f:
                                                         for line in f.readlines():
-                                                            if RegisterEncryptedEmail == line.split(";")[0]: isEmailBeingUsed = True
+                                                            if RegisterEncryptedEmail == line.split(";")[0][0:len(line.split(";")[0]) - 10]: isEmailBeingUsed = True
                                                 if not isEmailBeingUsed:
                                                     doesUserWantToContinue = True
                                                     if RegisterProfilePicture.imgpath.split("\\")[-1] == "default.jpg":
@@ -98,7 +96,7 @@ def RegisterUser(event):
                                                     if doesUserWantToContinue:
                                                         shutil.copy2(RegisterProfilePicture.imgpath, os.getcwd() + "\\data\\images\\" + RegisterEncryptedEmail[:15] + os.path.splitext(RegisterProfilePicture.imgpath)[1])
                                                         with open(os.getcwd() + "\\data\\user\\users_info.txt", "a") as f:
-                                                            f.write(RegisterEncryptedEmail + ";" + EncryptSHA256(RegisterPassword) + ";" + EncryptString(RegisterName, RegisterEncryptedEmail) + "\n")
+                                                            f.write(RegisterEncryptedEmail + EncryptSHA256("user")[:10] + ";" + EncryptSHA256(RegisterPassword) + ";" + EncryptString(RegisterName, RegisterEncryptedEmail) + "\n")
                                                         messagebox.showinfo("Sucesso", "O registo foi concluído com sucesso")
                                                 else: messagebox.showerror("Erro", "O e-mail introduzido já está registado na plataforma")
                                             else: messagebox.showerror("Erro", "A palavra-passe escolhida tem de ter 8 ou mais caracteres")
@@ -222,13 +220,22 @@ def UserLogin():
                         if os.path.exists(os.getcwd() + "\\data\\user\\users_info.txt"):
                             with open(os.getcwd() + "\\data\\user\\users_info.txt", "r") as f:
                                 for line in f.readlines():
-                                    if line.split(";")[0] == EncryptedLoginEmail:
+                                    if line.split(";")[0][0:len(line.split(";")[0]) - 10] == EncryptedLoginEmail:
                                         wasAccountFound = True
                                         if line.split(";")[1] == EncrypedLoginPassword:
                                             LoggedInUserInformation.append(True)
                                             LoggedInUserInformation.append(LoginEmail)
-                                            LoggedInUserInformation.append(DecryptString(line.split(";")[2], line.split(";")[0]))
-                                            messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\nBem-vindo " + LoggedInUserInformation[2])
+                                            LoggedInUserInformation.append(DecryptString(line.split(";")[2], line.split(";")[0][0:len(line.split(";")[0]) - 10]))
+                                            LoggedInSucessInfo = "\nNome: " + LoggedInUserInformation[2]
+                                            LoggedInSucessInfo += "\nE-mail: " + LoggedInUserInformation[1]
+                                            if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]: LoggedInSucessInfo += "\nTipo: utilizador"
+                                            else: LoggedInSucessInfo += "\nTipo: admin"
+                                            messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\n\nBem-vindo!" + LoggedInSucessInfo)
+                                            # Missing proper tests
+                                            # stats = { "loggedin": True, "email": LoginEmail, "name": DecryptString(line.split(";")[2], line.split(";")[0][0:len(line.split(";")[0]) - 10]) }
+                                            os.system("python " + os.getcwd() + "\\pr_main.pyw")
+                                            os._exit(0)
+                                            # exec(open(os.getcwd() + "\\pr_main.pyw").read(), stats)
                                         else: messagebox.showerror("Erro", "A palavra-passe introduzida está incorreta")
                             if not wasAccountFound: messagebox.showerror("Erro", "O e-mail introduzido não foi encontrado")
                         else: messagebox.showerror("Erro", "As informações inseridas não foram encontradas")
@@ -236,7 +243,11 @@ def UserLogin():
                 else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
             else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
         else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-    except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+    except Exception as err:
+        print("Error:\n" + str(err) + "\n")
+        print("Traceback:")
+        traceback.print_exc()
+        #messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
 
 # Login window
 MainWindow = Tk()

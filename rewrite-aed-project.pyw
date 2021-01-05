@@ -65,6 +65,7 @@ class MainProgram:
     def __init__(self, master):
         # [Initial configuration]
         self.master = master
+        self.loggedInUserInformation = []
         self.master.geometry("850x500")
         CenterWindow(self.master)
         self.master.title("Projeto AED")
@@ -73,9 +74,66 @@ class MainProgram:
         self.newWindow = Toplevel(self.master)
         self.app = Login(self.newWindow)
 
-    def MainProgramPanel(self, info):
-        self.randomLabel = Label(self.master, text = app.loggedInUserInformation[1])
-        self.randomLabel.place(x = 115, rely = 0.20, anchor = E)
+    def MainProgram_FrontPage(self):
+        # [Layout] - Sidebar > Profile Picture
+        self.possiblePaths = [EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpeg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".png"]
+        for path in self.possiblePaths:
+            if os.path.exists(os.getcwd() + "\\data\\images\\" + path):
+                self.profilePicture = Label(self.master)
+                self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
+                self.profilePicture["image"] = self.profilePicture.image
+                self.profilePicture.place(x = 60, y = 40)
+                break
+            else:
+                if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
+                    # verify if its really the default image
+                    self.profilePicture = Label(self.master)
+                    self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
+                    self.profilePicture["image"] = self.profilePicture.image
+                    self.profilePicture.place(x = 60, y = 40)
+                    break
+                else:
+                    messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
+                    os._exit(0)
+
+        # FIX THIS BS
+        # FIX THIS BS
+        # FIX THIS BS
+        # FIX THIS BS
+        # FIX THIS BS
+        # FIX THIS BS
+        # [Layout] - Sidebar > User's first and last name
+        self.usersName = Label(self.master, text = self.loggedInUserInformation[2])
+        self.usersName.place(x = 50, y = 130)
+
+        # [Layout] - Sidebar > User's type
+        if self.loggedInUserInformation[3] == "admin": self.loggedInUserInformation[3] = "administrator"
+        self.usersType = Label(self.master, text = self.loggedInUserInformation[3])
+        self.usersType.place(x = 50, y = 160)
+
+        # [Layout] - Sidebar > Edit profile button
+        self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25)
+        self.editProfile.place(x = 0, y = 200)
+
+        # [Layout] - Sidebar > Edit profile button
+        self.usersRecipes = Button(self.master, text = "As minhas receitas", height = 2, width = 25)
+        self.usersRecipes.place(x = 0, y = 245)
+
+        # [Layout] - Sidebar > Edit profile button
+        self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25)
+        self.allRecipes.place(x = 0, y = 290)
+
+        # [Layout] - Sidebar > Favourites button
+        self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25)
+        self.usersFavourite.place(x = 0, y = 335)
+
+        # [Layout] - Sidebar > Notifications button
+        self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
+        self.usersNotifications.place(x = 0, y = 380)
+
+        # [Layout] - Sidebar > Exit button
+        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25)
+        self.exitMainProgram.place(x = 0, y = 425)
 
 class Login:
     def __init__(self, master):
@@ -149,12 +207,13 @@ class Login:
                                                 self.loggedInSucessInfo += "\nE-mail: " + app.loggedInUserInformation[1]
                                                 if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]: self.loggedInSucessInfo += "\nTipo: utilizador"
                                                 else: self.loggedInSucessInfo += "\nTipo: admin"
+                                                app.loggedInUserInformation.append(self.loggedInSucessInfo.replace(" ", "").split(":")[-1])
                                                 messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\n\nBem-vindo!" + self.loggedInSucessInfo)
                                                 # Close login window and open main program back up
                                                 self.master.destroy()
                                                 app.master.update()
                                                 app.master.deiconify()
-                                                app.MainProgramPanel(app.loggedInUserInformation)
+                                                app.MainProgram_FrontPage()
                                             else: messagebox.showerror("Erro", "A palavra-passe introduzida está incorreta")
                                 if not self.wasAccountFound: messagebox.showerror("Erro", "O e-mail introduzido não foi encontrado")
                             else: messagebox.showerror("Erro", "As informações inseridas não foram encontradas")
@@ -326,5 +385,4 @@ class Register:
 if __name__ == '__main__':
     root = Tk()
     app = MainProgram(root)
-    app.loggedInUserInformation = []
     root.mainloop()

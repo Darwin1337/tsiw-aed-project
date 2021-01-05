@@ -70,6 +70,17 @@ class MainProgram:
         CenterWindow(self.master)
         self.master.title("Projeto AED")
         self.master.resizable(False, False)
+        self.MainProgram_Authentication()
+
+    def ClearWindowWidgets(self, target):
+        widgetsList = target.winfo_children()
+        for widget in widgetsList:
+            if widget.winfo_children():
+                widgetsList.extend(widget.winfo_children())
+        for widget in widgetsList: widget.destroy()
+
+    def MainProgram_Authentication(self):
+        self.ClearWindowWidgets(self.master)
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = Login(self.newWindow)
@@ -77,24 +88,28 @@ class MainProgram:
     def MainProgram_FrontPage(self):
         # [Layout] - Sidebar > Profile Picture
         self.possiblePaths = [EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpeg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".png"]
+        self.wasPhotoFound = False
         for path in self.possiblePaths:
             if os.path.exists(os.getcwd() + "\\data\\images\\" + path):
                 self.profilePicture = Label(self.master)
                 self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
                 self.profilePicture["image"] = self.profilePicture.image
                 self.profilePicture.place(x = 60, y = 40)
+                self.wasPhotoFound = True
                 break
+        if not self.wasPhotoFound:
+            if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
+                # verify if its really the default image
+                # verify if its really the default image
+                # verify if its really the default image
+                # verify if its really the default image
+                self.profilePicture = Label(self.master)
+                self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
+                self.profilePicture["image"] = self.profilePicture.image
+                self.profilePicture.place(x = 60, y = 40)
             else:
-                if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
-                    # verify if its really the default image
-                    self.profilePicture = Label(self.master)
-                    self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
-                    self.profilePicture["image"] = self.profilePicture.image
-                    self.profilePicture.place(x = 60, y = 40)
-                    break
-                else:
-                    messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
-                    os._exit(0)
+                messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
+                os._exit(0)
 
         # FIX THIS BS
         # FIX THIS BS
@@ -131,8 +146,8 @@ class MainProgram:
         self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
         self.usersNotifications.place(x = 0, y = 380)
 
-        # [Layout] - Sidebar > Exit button
-        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25)
+        # [Layout] - Sidebar > Logout button
+        self.exitMainProgram = Button(self.master, text = "Terminar Sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
         self.exitMainProgram.place(x = 0, y = 425)
 
 class Login:

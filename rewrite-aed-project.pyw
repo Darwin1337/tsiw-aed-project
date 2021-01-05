@@ -160,7 +160,9 @@ class MainProgram:
         self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command = self.ExitProgram)
         self.exitMainProgram.place(x = 0, y = 440)
 
+
 class Login:
+    
     def __init__(self, master):
         # [Initial configuration]
         self.master = master
@@ -208,6 +210,11 @@ class Login:
         self.labelRegister.bind("<Enter>", partial(ChangeTextColor, self.labelRegister, "gray"))
         self.labelRegister.bind("<Leave>", partial(ChangeTextColor, self.labelRegister, "black"))
 
+        # [Binding enter button click]
+        def func(event):
+            self.UserLogin()
+        self.master.bind('<Return>', func)
+        
     def UserLogin(self):
         try:
             app.loggedInUserInformation.clear()
@@ -330,6 +337,11 @@ class Register:
         self.labelBack.bind("<Button-1>", partial(self.BackToLogin))
         self.labelBack.bind("<Enter>", partial(ChangeTextColor, self.labelBack, "gray"))
         self.labelBack.bind("<Leave>", partial(ChangeTextColor, self.labelBack, "black"))
+
+        # [Binding enter button click]
+        def func(event):
+            self.UserRegister()
+        self.master.bind('<Return>', func)
 
     def UserRegister(self):
         try:

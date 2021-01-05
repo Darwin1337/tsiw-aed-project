@@ -70,9 +70,23 @@ class MainProgram:
         CenterWindow(self.master)
         self.master.title("Projeto AED")
         self.master.resizable(False, False)
+        self.MainProgram_Authentication()
+
+    def ClearWindowWidgets(self, target):
+        widgetsList = target.winfo_children()
+        for widget in widgetsList:
+            if widget.winfo_children():
+                widgetsList.extend(widget.winfo_children())
+        for widget in widgetsList: widget.destroy()
+
+    def MainProgram_Authentication(self):
+        self.ClearWindowWidgets(self.master)
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = Login(self.newWindow)
+    
+    def ExitProgram(self):
+        os._exit(0)
 
     def MainProgram_FrontPage(self):
         # [Layout] - Sidebar > Profile Picture
@@ -82,7 +96,7 @@ class MainProgram:
                 self.profilePicture = Label(self.master)
                 self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
                 self.profilePicture["image"] = self.profilePicture.image
-                self.profilePicture.place(x = 60, y = 40)
+                self.profilePicture.place(x = 60, y = 20)
                 break
             else:
                 if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
@@ -90,7 +104,7 @@ class MainProgram:
                     self.profilePicture = Label(self.master)
                     self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
                     self.profilePicture["image"] = self.profilePicture.image
-                    self.profilePicture.place(x = 60, y = 40)
+                    self.profilePicture.place(x = 60, y = 20)
                     break
                 else:
                     messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
@@ -102,38 +116,48 @@ class MainProgram:
         # FIX THIS BS
         # FIX THIS BS
         # FIX THIS BS
+        # [Layout] - Sidebar > Menu admin
+        menuBar = Menu(self.master)
+        menuAdmin = Menu(menuBar, tearoff=0)
+        menuAdmin.add_command(label = "Admin", command="noaction")
+        menuBar.add_cascade(label="Admin", menu=menuAdmin)
+        self.master.configure(menu=menuBar)
         # [Layout] - Sidebar > User's first and last name
         self.usersName = Label(self.master, text = self.loggedInUserInformation[2])
-        self.usersName.place(x = 50, y = 130)
+        self.usersName.place(x = 50, y = 110)
 
         # [Layout] - Sidebar > User's type
         if self.loggedInUserInformation[3] == "admin": self.loggedInUserInformation[3] = "administrator"
         self.usersType = Label(self.master, text = self.loggedInUserInformation[3])
-        self.usersType.place(x = 50, y = 160)
+        self.usersType.place(x = 65, y = 130)
 
         # [Layout] - Sidebar > Edit profile button
         self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25)
-        self.editProfile.place(x = 0, y = 200)
+        self.editProfile.place(x = 0, y = 170)
 
         # [Layout] - Sidebar > Edit profile button
         self.usersRecipes = Button(self.master, text = "As minhas receitas", height = 2, width = 25)
-        self.usersRecipes.place(x = 0, y = 245)
+        self.usersRecipes.place(x = 0, y = 215)
 
         # [Layout] - Sidebar > Edit profile button
         self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25)
-        self.allRecipes.place(x = 0, y = 290)
+        self.allRecipes.place(x = 0, y = 260)
 
         # [Layout] - Sidebar > Favourites button
         self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25)
-        self.usersFavourite.place(x = 0, y = 335)
+        self.usersFavourite.place(x = 0, y = 305)
 
         # [Layout] - Sidebar > Notifications button
         self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
-        self.usersNotifications.place(x = 0, y = 380)
+        self.usersNotifications.place(x = 0, y = 350)
+
+        # [Layout] - Sidebar > Log Out button
+        self.usersNotifications = Button(self.master, text = "Terminar sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
+        self.usersNotifications.place(x = 0, y = 395)
 
         # [Layout] - Sidebar > Exit button
-        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25)
-        self.exitMainProgram.place(x = 0, y = 425)
+        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command=self.ExitProgram)
+        self.exitMainProgram.place(x = 0, y = 440)
 
 class Login:
     def __init__(self, master):

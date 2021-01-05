@@ -87,9 +87,6 @@ class MainProgram:
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = Login(self.newWindow)
-    
-    def ExitProgram(self):
-        os._exit(0)
 
     def MainProgram_FrontPage(self):
         # [Layout] - Admin Menu
@@ -125,36 +122,15 @@ class MainProgram:
                 messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
                 os._exit(0)
 
-<<<<<<< HEAD
         # [Layout] - Sidebar > User's first and last name
         self.displayName = self.loggedInUserInformation[2].strip().split(" ")[0] + " " + self.loggedInUserInformation[2].strip().split(" ")[-1]
         self.usersName = Label(self.master, text = self.displayName)
-=======
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # [Layout] - Sidebar > Menu admin
-        menuBar = Menu(self.master)
-        menuAdmin = Menu(menuBar, tearoff=0)
-        menuAdmin.add_command(label = "Admin", command="noaction")
-        menuBar.add_cascade(label="Admin", menu=menuAdmin)
-        self.master.configure(menu=menuBar)
-        # [Layout] - Sidebar > User's first and last name
-        self.usersName = Label(self.master, text = self.loggedInUserInformation[2])
->>>>>>> 2f2752efa8b322aad160dd1510991f3ad994bc54
         self.usersName.place(x = 50, y = 110)
 
         # [Layout] - Sidebar > User's type
         if self.loggedInUserInformation[3] == "admin": self.loggedInUserInformation[3] = "administrator"
         self.usersType = Label(self.master, text = self.loggedInUserInformation[3])
-<<<<<<< HEAD
         self.usersType.place(x = 50, y = 130)
-=======
-        self.usersType.place(x = 65, y = 130)
->>>>>>> 2f2752efa8b322aad160dd1510991f3ad994bc54
 
         # [Layout] - Sidebar > Edit user's profile button
         self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25)
@@ -175,7 +151,6 @@ class MainProgram:
         # [Layout] - Sidebar > User's notifications button
         self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
         self.usersNotifications.place(x = 0, y = 350)
-<<<<<<< HEAD
 
         # [Layout] - Sidebar > Logout button
         self.logoutUser = Button(self.master, text = "Terminar Sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
@@ -183,15 +158,6 @@ class MainProgram:
 
         # [Layout] - Sidebar > Exit button
         self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command = self.ExitProgram)
-=======
-
-        # [Layout] - Sidebar > Log Out button
-        self.usersNotifications = Button(self.master, text = "Terminar sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
-        self.usersNotifications.place(x = 0, y = 395)
-
-        # [Layout] - Sidebar > Exit button
-        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command=self.ExitProgram)
->>>>>>> 2f2752efa8b322aad160dd1510991f3ad994bc54
         self.exitMainProgram.place(x = 0, y = 440)
 
 class Login:

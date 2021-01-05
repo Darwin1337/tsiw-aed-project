@@ -79,6 +79,9 @@ class MainProgram:
                 widgetsList.extend(widget.winfo_children())
         for widget in widgetsList: widget.destroy()
 
+    def ExitProgram(self):
+        os._exit(0)
+
     def MainProgram_Authentication(self):
         self.ClearWindowWidgets(self.master)
         self.master.withdraw()
@@ -86,6 +89,14 @@ class MainProgram:
         self.app = Login(self.newWindow)
 
     def MainProgram_FrontPage(self):
+        # [Layout] - Admin Menu
+        if self.loggedInUserInformation[3] == "admin":
+            self.adminBar = Menu(self.master)
+            self.adminMenu = Menu(self.adminBar, tearoff = 0)
+            self.adminMenu.add_command(label = "Admin", command = "noaction")
+            self.adminBar.add_cascade(label = "Admin", menu = self.adminMenu)
+            self.master.configure(menu = self.adminBar)
+
         # [Layout] - Sidebar > Profile Picture
         self.possiblePaths = [EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpeg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".png"]
         self.wasPhotoFound = False
@@ -94,61 +105,60 @@ class MainProgram:
                 self.profilePicture = Label(self.master)
                 self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
                 self.profilePicture["image"] = self.profilePicture.image
-                self.profilePicture.place(x = 60, y = 40)
+                self.profilePicture.place(x = 60, y = 20)
                 self.wasPhotoFound = True
                 break
         if not self.wasPhotoFound:
             if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
-                # verify if its really the default image
-                # verify if its really the default image
-                # verify if its really the default image
-                # verify if its really the default image
-                self.profilePicture = Label(self.master)
-                self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
-                self.profilePicture["image"] = self.profilePicture.image
-                self.profilePicture.place(x = 60, y = 40)
+                if MD5Checksum() != "28c17e68aa44166d1c8e716bd535676a":
+                    self.profilePicture = Label(self.master)
+                    self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
+                    self.profilePicture["image"] = self.profilePicture.image
+                    self.profilePicture.place(x = 60, y = 20)
+                else:
+                    messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar")
+                    os._exit(0)
             else:
                 messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
                 os._exit(0)
 
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
-        # FIX THIS BS
         # [Layout] - Sidebar > User's first and last name
-        self.usersName = Label(self.master, text = self.loggedInUserInformation[2])
-        self.usersName.place(x = 50, y = 130)
+        self.displayName = self.loggedInUserInformation[2].strip().split(" ")[0] + " " + self.loggedInUserInformation[2].strip().split(" ")[-1]
+        self.usersName = Label(self.master, text = self.displayName)
+        self.usersName.place(x = 50, y = 110)
 
         # [Layout] - Sidebar > User's type
         if self.loggedInUserInformation[3] == "admin": self.loggedInUserInformation[3] = "administrator"
         self.usersType = Label(self.master, text = self.loggedInUserInformation[3])
-        self.usersType.place(x = 50, y = 160)
+        self.usersType.place(x = 50, y = 130)
 
-        # [Layout] - Sidebar > Edit profile button
+        # [Layout] - Sidebar > Edit user's profile button
         self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25)
-        self.editProfile.place(x = 0, y = 200)
+        self.editProfile.place(x = 0, y = 170)
 
-        # [Layout] - Sidebar > Edit profile button
+        # [Layout] - Sidebar > User's recipes button
         self.usersRecipes = Button(self.master, text = "As minhas receitas", height = 2, width = 25)
-        self.usersRecipes.place(x = 0, y = 245)
+        self.usersRecipes.place(x = 0, y = 215)
 
-        # [Layout] - Sidebar > Edit profile button
+        # [Layout] - Sidebar > All recipes button
         self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25)
-        self.allRecipes.place(x = 0, y = 290)
+        self.allRecipes.place(x = 0, y = 260)
 
-        # [Layout] - Sidebar > Favourites button
+        # [Layout] - Sidebar > User's favourites button
         self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25)
-        self.usersFavourite.place(x = 0, y = 335)
+        self.usersFavourite.place(x = 0, y = 305)
 
-        # [Layout] - Sidebar > Notifications button
+        # [Layout] - Sidebar > User's notifications button
         self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
-        self.usersNotifications.place(x = 0, y = 380)
+        self.usersNotifications.place(x = 0, y = 350)
 
         # [Layout] - Sidebar > Logout button
-        self.exitMainProgram = Button(self.master, text = "Terminar Sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
-        self.exitMainProgram.place(x = 0, y = 425)
+        self.logoutUser = Button(self.master, text = "Terminar Sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
+        self.logoutUser.place(x = 0, y = 395)
+
+        # [Layout] - Sidebar > Exit button
+        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command = self.ExitProgram)
+        self.exitMainProgram.place(x = 0, y = 440)
 
 class Login:
     def __init__(self, master):

@@ -65,7 +65,7 @@ class MainProgram:
     def __init__(self, master):
         # [Initial configuration]
         self.master = master
-        self.loggedInUserInformation = []
+        self.loggedInUserInformation = [False]
         self.master.geometry("850x500")
         CenterWindow(self.master)
         self.master.title("Projeto AED")
@@ -80,22 +80,35 @@ class MainProgram:
         for widget in widgetsList: widget.destroy()
 
     def ExitProgram(self):
-        os._exit(0)
+        self.exitPrompt = messagebox.askquestion ("Sair", "Tem a certeza que prentende sair do programa?", icon = "warning")
+        if self.exitPrompt == "yes":
+            os._exit(0)
 
     def MainProgram_Authentication(self):
-        self.ClearWindowWidgets(self.master)
-        self.master.withdraw()
-        self.newWindow = Toplevel(self.master)
-        self.app = Login(self.newWindow)
+        if self.loggedInUserInformation[0]:
+            self.logoutPrompt = messagebox.askquestion ("Terminar sessão", "Tem a certeza que prentende terminar sessão?", icon = "warning")
+            if self.logoutPrompt == "yes":
+                self.loggedInUserInformation[0] = False
+                self.MainProgram_Authentication()
+        else:
+            self.ClearWindowWidgets(self.master)
+            self.master.withdraw()
+            self.newWindow = Toplevel(self.master)
+            self.app = Login(self.newWindow)
 
     def MainProgram_FrontPage(self):
-        # [Layout] - Admin Menu
+        def SwitchTabs(a):
+            self.tabControl.select(a)
+
+        # [Layout] - Admin menu
         if self.loggedInUserInformation[3] == "admin":
+            self.master.geometry("850x518")
             self.adminBar = Menu(self.master)
             self.adminMenu = Menu(self.adminBar, tearoff = 0)
             self.adminMenu.add_command(label = "Admin", command = "noaction")
             self.adminBar.add_cascade(label = "Admin", menu = self.adminMenu)
             self.master.configure(menu = self.adminBar)
+        else: self.master.geometry("850x500")
 
         # [Layout] - Sidebar > Profile Picture
         self.possiblePaths = [EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpeg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".png"]
@@ -110,7 +123,7 @@ class MainProgram:
                 break
         if not self.wasPhotoFound:
             if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
-                if MD5Checksum() != "28c17e68aa44166d1c8e716bd535676a":
+                if MD5Checksum() == "28c17e68aa44166d1c8e716bd535676a":
                     self.profilePicture = Label(self.master)
                     self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
                     self.profilePicture["image"] = self.profilePicture.image
@@ -133,36 +146,49 @@ class MainProgram:
         self.usersType.place(x = 50, y = 130)
 
         # [Layout] - Sidebar > Edit user's profile button
-        self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25)
+        self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25, command = partial(SwitchTabs, 0))
         self.editProfile.place(x = 0, y = 170)
 
         # [Layout] - Sidebar > User's recipes button
-        self.usersRecipes = Button(self.master, text = "As minhas receitas", height = 2, width = 25)
+        self.usersRecipes = Button(self.master, text = "Minhas receitas", height = 2, width = 25, command = partial(SwitchTabs, 1))
         self.usersRecipes.place(x = 0, y = 215)
 
         # [Layout] - Sidebar > All recipes button
-        self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25)
+        self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25, command = partial(SwitchTabs, 2))
         self.allRecipes.place(x = 0, y = 260)
 
         # [Layout] - Sidebar > User's favourites button
-        self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25)
+        self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25, command = partial(SwitchTabs, 3))
         self.usersFavourite.place(x = 0, y = 305)
 
         # [Layout] - Sidebar > User's notifications button
-        self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25)
+        self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25, command = partial(SwitchTabs, 4))
         self.usersNotifications.place(x = 0, y = 350)
 
         # [Layout] - Sidebar > Logout button
-        self.logoutUser = Button(self.master, text = "Terminar Sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
+        self.logoutUser = Button(self.master, text = "Terminar sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
         self.logoutUser.place(x = 0, y = 395)
 
         # [Layout] - Sidebar > Exit button
         self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command = self.ExitProgram)
         self.exitMainProgram.place(x = 0, y = 440)
 
+        # [Layout] - Tabs (notebook)
+        self.tabControl = ttk.Notebook(self.master)
+        self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500, bg = "blue")
+        self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500, bg = "red")
+        self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500, bg = "green")
+        self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
+        self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500, bg = "yellow")
+        self.tabControl.add(self.tabEditProfile)
+        self.tabControl.add(self.tabUsersRecipes)
+        self.tabControl.add(self.tabAllRecipes)
+        self.tabControl.add(self.tabUsersFavourite)
+        self.tabControl.add(self.tabUsersNotifications)
+        self.tabControl.select(4)
+        self.tabControl.place(x = 200, y = -23)
 
 class Login:
-    
     def __init__(self, master):
         # [Initial configuration]
         self.master = master
@@ -171,6 +197,7 @@ class Login:
         self.master.title("Iniciar Sessão")
         self.master.resizable(False, False)
         self.master.focus_force()
+        self.master.bind('<Return>', self.UserLogin)
 
         # [Initial configuration - variables]
         self.loginEmailInput = StringVar()
@@ -210,14 +237,10 @@ class Login:
         self.labelRegister.bind("<Enter>", partial(ChangeTextColor, self.labelRegister, "gray"))
         self.labelRegister.bind("<Leave>", partial(ChangeTextColor, self.labelRegister, "black"))
 
-        # [Binding enter button click]
-        def func(event):
-            self.UserLogin()
-        self.master.bind('<Return>', func)
-        
-    def UserLogin(self):
+    def UserLogin(self, event = None):
         try:
             app.loggedInUserInformation.clear()
+            app.loggedInUserInformation.append(False)
             self.loginEmail = self.loginEmailInput.get().strip().lower()
             self.loginPassword = self.loginPasswordInput.get().strip()
             if re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)").match(self.loginEmail):
@@ -232,7 +255,7 @@ class Login:
                                         if line.split(";")[0][0:len(line.split(";")[0]) - 10] == self.encryptedLoginEmail:
                                             self.wasAccountFound = True
                                             if line.split(";")[1] == self.encrypedLoginPassword:
-                                                app.loggedInUserInformation.append(True)
+                                                app.loggedInUserInformation[0] = True
                                                 app.loggedInUserInformation.append(self.loginEmail)
                                                 app.loggedInUserInformation.append(DecryptString(line.split(";")[2], line.split(";")[0][0:len(line.split(";")[0]) - 10]))
                                                 self.loggedInSucessInfo = "\nNome: " + app.loggedInUserInformation[2]
@@ -253,7 +276,7 @@ class Login:
                     else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
                 else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
             else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-        except Exception as err: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+        except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
 
     def OpenRegisterWindow(self, event):
         self.master.withdraw()
@@ -269,6 +292,7 @@ class Register:
         self.master.title("Efetuar Registo")
         self.master.resizable(False, False)
         self.master.focus_force()
+        self.master.bind('<Return>', self.UserRegister)
 
         # [Initial configuration - variables]
         self.nameInput = StringVar()
@@ -338,12 +362,7 @@ class Register:
         self.labelBack.bind("<Enter>", partial(ChangeTextColor, self.labelBack, "gray"))
         self.labelBack.bind("<Leave>", partial(ChangeTextColor, self.labelBack, "black"))
 
-        # [Binding enter button click]
-        def func(event):
-            self.UserRegister()
-        self.master.bind('<Return>', func)
-
-    def UserRegister(self):
+    def UserRegister(self, event = None):
         try:
             self.registerName = " ".join(self.nameInput.get().lower().split())
             self.registerEmail = self.emailInput.get().strip().lower()
@@ -370,7 +389,7 @@ class Register:
                                                 if not self.isEmailBeingUsed:
                                                     self.doesUserWantToContinue = True
                                                     if self.registerProfilePicture.imgpath.split("\\")[-1] == "default.jpg":
-                                                        self.continueDefault = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de perfil, se continuar irá ser selecionada a foto de perfil padrão, prosseguir?", icon = 'warning')
+                                                        self.continueDefault = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de perfil, se continuar irá ser selecionada a foto de perfil padrão, prosseguir?", icon = "warning")
                                                         if self.continueDefault == "no": self.doesUserWantToContinue = False
                                                         else:
                                                             if MD5Checksum() != self.defaultProfilePicture:

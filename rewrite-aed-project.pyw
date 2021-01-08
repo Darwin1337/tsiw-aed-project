@@ -6,6 +6,7 @@ import hashlib # Usado para encriptar informações confidenciais (e-mails e pas
 import shutil # Usado para copiar ficheiros de um directório para outro
 import traceback # Usado para facilitar o debugging
 from tkinter import *
+from tkinter.ttk import Combobox
 from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
@@ -213,7 +214,19 @@ class MainProgram:
         self.tabControl.add(self.tabUsersNotifications)
         self.tabControl.select(4)
         self.tabControl.place(x = 200, y = -23)
-
+        self.teste=LabelFrame(self.tabAllRecipes, text = "Filtragem", width = "649", height = "50", bd = "2")
+        self.teste.place(x=0,y=0)
+        self.searchBar=ttk.Entry(self.teste, text="Pesquisar", width="20")
+        self.searchBar.place(x=0,y=5)
+        self.searchButton=ttk.Button(self.teste, text="Pesquisar")
+        self.searchButton.place(x=126,y=2)
+        self.categoryList=["Vegetariano", "Bolos", "Tradicional"]
+        self.categoryDropDown=Combobox(self.teste, value=self.categoryList)
+        self.categoryDropDown.place(x=200,y=5)
+        self.mostLiked=ttk.Checkbutton(self.teste, text="Com mais gostos")
+        self.mostLiked.place(x=350,y=5)
+        self.mostRated=ttk.Checkbutton(self.teste, text="Melhor classificados")
+        self.mostRated.place(x=500,y=5)
 class Login:
     def __init__(self, master):
         # [Initial configuration]

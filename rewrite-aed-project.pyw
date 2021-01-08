@@ -50,6 +50,9 @@ def ShowPassword(origin, target):
 def ChangeTextColor(target, color, event):
     target.config(fg = color)
 
+def ChangeBackgroundColor(target, color, event):
+    if target["bg"] != "#a8a8a8": target.config(bg = color)
+
 def EncryptSHA256(data):
     EncryptedData = \
         hashlib.sha256(data.encode()).hexdigest()
@@ -97,8 +100,12 @@ class MainProgram:
             self.app = Login(self.newWindow)
 
     def MainProgram_FrontPage(self):
-        def SwitchTabs(a):
+        def SwitchTabs(a, b):
             self.tabControl.select(a)
+            existingButtons = [self.editProfile, self.usersRecipes, self.allRecipes, self.usersFavourite, self.usersNotifications]
+            for button in existingButtons:
+                if button != b: button.config(bg = "#f0f0f0")
+            b.config(bg = "#a8a8a8")
 
         # [Layout] - Admin menu
         if self.loggedInUserInformation[3] == "admin":
@@ -146,32 +153,51 @@ class MainProgram:
         self.usersType.place(x = 50, y = 130)
 
         # [Layout] - Sidebar > Edit user's profile button
-        self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25, command = partial(SwitchTabs, 0))
+        self.editProfile = Button(self.master, text = "Editar perfil", height = 2, width = 25, cursor="hand2")
+        self.editProfile["command"] = partial(SwitchTabs, 0, self.editProfile)
         self.editProfile.place(x = 0, y = 170)
+        self.editProfile.bind("<Enter>", partial(ChangeBackgroundColor, self.editProfile, "lightgray"))
+        self.editProfile.bind("<Leave>", partial(ChangeBackgroundColor, self.editProfile, "#f0f0f0"))
 
         # [Layout] - Sidebar > User's recipes button
-        self.usersRecipes = Button(self.master, text = "Minhas receitas", height = 2, width = 25, command = partial(SwitchTabs, 1))
+        self.usersRecipes = Button(self.master, text = "Minhas receitas", height = 2, width = 25, cursor="hand2")
+        self.usersRecipes["command"] = partial(SwitchTabs, 1, self.usersRecipes)
         self.usersRecipes.place(x = 0, y = 215)
+        self.usersRecipes.bind("<Enter>", partial(ChangeBackgroundColor, self.usersRecipes, "lightgray"))
+        self.usersRecipes.bind("<Leave>", partial(ChangeBackgroundColor, self.usersRecipes, "#f0f0f0"))
 
         # [Layout] - Sidebar > All recipes button
-        self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25, command = partial(SwitchTabs, 2))
+        self.allRecipes = Button(self.master, text = "Receitas", height = 2, width = 25, cursor="hand2")
+        self.allRecipes["command"] = partial(SwitchTabs, 2, self.allRecipes)
         self.allRecipes.place(x = 0, y = 260)
+        self.allRecipes.bind("<Enter>", partial(ChangeBackgroundColor, self.allRecipes, "lightgray"))
+        self.allRecipes.bind("<Leave>", partial(ChangeBackgroundColor, self.allRecipes, "#f0f0f0"))
 
         # [Layout] - Sidebar > User's favourites button
-        self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25, command = partial(SwitchTabs, 3))
+        self.usersFavourite = Button(self.master, text = "Favoritos", height = 2, width = 25, cursor="hand2")
+        self.usersFavourite["command"] = partial(SwitchTabs, 3, self.usersFavourite)
         self.usersFavourite.place(x = 0, y = 305)
+        self.usersFavourite.bind("<Enter>", partial(ChangeBackgroundColor, self.usersFavourite, "lightgray"))
+        self.usersFavourite.bind("<Leave>", partial(ChangeBackgroundColor, self.usersFavourite, "#f0f0f0"))
 
         # [Layout] - Sidebar > User's notifications button
-        self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25, command = partial(SwitchTabs, 4))
+        self.usersNotifications = Button(self.master, text = "Notificações", height = 2, width = 25, bg = "#a8a8a8", cursor="hand2")
+        self.usersNotifications["command"] = partial(SwitchTabs, 4, self.usersNotifications)
         self.usersNotifications.place(x = 0, y = 350)
+        self.usersNotifications.bind("<Enter>", partial(ChangeBackgroundColor, self.usersNotifications, "lightgray"))
+        self.usersNotifications.bind("<Leave>", partial(ChangeBackgroundColor, self.usersNotifications, "#f0f0f0"))
 
         # [Layout] - Sidebar > Logout button
-        self.logoutUser = Button(self.master, text = "Terminar sessão", height = 2, width = 25, command = self.MainProgram_Authentication)
+        self.logoutUser = Button(self.master, text = "Terminar sessão", height = 2, width = 25, cursor="hand2", command = self.MainProgram_Authentication)
         self.logoutUser.place(x = 0, y = 395)
+        self.logoutUser.bind("<Enter>", partial(ChangeBackgroundColor, self.logoutUser, "lightgray"))
+        self.logoutUser.bind("<Leave>", partial(ChangeBackgroundColor, self.logoutUser, "#f0f0f0"))
 
         # [Layout] - Sidebar > Exit button
-        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, command = self.ExitProgram)
+        self.exitMainProgram = Button(self.master, text = "Sair", height = 2, width = 25, cursor="hand2", command = self.ExitProgram)
         self.exitMainProgram.place(x = 0, y = 440)
+        self.exitMainProgram.bind("<Enter>", partial(ChangeBackgroundColor, self.exitMainProgram, "lightgray"))
+        self.exitMainProgram.bind("<Leave>", partial(ChangeBackgroundColor, self.exitMainProgram, "#f0f0f0"))
 
         # [Layout] - Tabs (notebook)
         self.tabControl = ttk.Notebook(self.master)
@@ -276,7 +302,11 @@ class Login:
                     else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
                 else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
             else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-        except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+        except Exception as err:
+            print("Error:\n" + str(err) + "\n")
+            print("Traceback:")
+            traceback.print_exc()
+            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
 
     def OpenRegisterWindow(self, event):
         self.master.withdraw()
@@ -410,7 +440,11 @@ class Register:
                     else: messagebox.showerror("Erro", "O nome introduzido é inválido")
                 else: messagebox.showerror("Erro", "Introduza, pelo menos, o primeiro e último nome")
             else: messagebox.showerror("Erro", "O nome introduzido é inválido")
-        except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+        except Exception as err:
+            print("Error:\n" + str(err) + "\n")
+            print("Traceback:")
+            traceback.print_exc()
+            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
 
     def SelectPicture(self, origin):
         self.imageCheck, self.path = False, filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])

@@ -106,6 +106,14 @@ class MainProgram:
             for button in existingButtons:
                 if button != b: button.config(bg = "#f0f0f0")
             b.config(bg = "#a8a8a8")
+            if a == 2: self.MainProgram_AllRecipesPage()
+
+        # [Configuration] - Control variables
+        self.hasUserGoneToPage0 = False
+        self.hasUserGoneToPage1 = False
+        self.hasUserGoneToPage2 = False
+        self.hasUserGoneToPage3 = False
+        self.hasUserGoneToPage4 = False
 
         # [Layout] - Admin menu
         if self.loggedInUserInformation[3] == "admin":
@@ -203,7 +211,7 @@ class MainProgram:
         self.tabControl = ttk.Notebook(self.master)
         self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500, bg = "blue")
         self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500, bg = "red")
-        self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500, bg = "green")
+        self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
         self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500, bg = "yellow")
         self.tabControl.add(self.tabEditProfile)
@@ -213,6 +221,95 @@ class MainProgram:
         self.tabControl.add(self.tabUsersNotifications)
         self.tabControl.select(4)
         self.tabControl.place(x = 200, y = -23)
+
+    def MainProgram_AllRecipesPage(self):
+        def ClearFilters(a):
+            if str(type(a)) == "<class 'tkinter.Entry'>": a.delete(0, END)
+            else: a.current(0)
+
+        def ClearAllFilters():
+            self.orderByDropdown.current(0)
+            self.searchByCategoryDropdown.current(0)
+            self.searchByIngredientText.delete(0, END)
+            self.searchByTitleText.delete(0, END)
+
+        def UseMouseWheel(event):
+            self.recipesCanvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
+
+        if not self.hasUserGoneToPage2:
+            self.hasUserGoneToPage2 = True
+
+            # [Layout] - Filters fieldset
+            self.filterPanel = LabelFrame(self.tabAllRecipes, text = "Filtros de Pesquisa", width = "640", height = "135", bd = "2")
+            self.filterPanel.place(x = 5, y = 5)
+
+            # [Layout] - Search by title filter
+            self.searchByTitleLabel = Label(self.filterPanel, text = "Pesquisar por título:")
+            self.searchByTitleLabel.place(x = 5, y = 5)
+            self.searchByTitleText = Entry(self.filterPanel, width = "25")
+            self.searchByTitleText.place(x = 8, y = 30)
+            self.searchByTitleClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByTitleText))
+            self.searchByTitleClearButton.place(x = 165, y = 27)
+
+            # [Layout] - Search by ingredient filter
+            self.searchByIngredientLabel = Label(self.filterPanel, text = "Pesquisar por ingrediente:")
+            self.searchByIngredientLabel.place(x = 5, y = 55)
+            self.searchByIngredientText = Entry(self.filterPanel, width = "25")
+            self.searchByIngredientText.place(x = 8, y = 80)
+            self.searchByIngredientClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByIngredientText))
+            self.searchByIngredientClearButton.place(x = 165, y = 77)
+
+            # [Layout] - Search by category filter
+            self.searchByCategoryLabel = Label(self.filterPanel, text = "Ordernar por categoria:")
+            self.searchByCategoryLabel.place(x = 225, y = 5)
+            self.searchByCategoryList = ["Qualquer", "Vegetariano", "Bolos", "Tradicional"]
+            self.searchByCategoryDropdown = ttk.Combobox(self.filterPanel, value = self.searchByCategoryList, width = "25")
+            self.searchByCategoryDropdown.place(x = 228, y = 30)
+            self.searchByCategoryDropdown.current(0)
+            self.searchByCategoryDropdownClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByCategoryDropdown))
+            self.searchByCategoryDropdownClearButton.place(x = 405, y = 28)
+
+            # [Layout] - Order by filter
+            self.orderByLabel = Label(self.filterPanel, text = "Ordernar por:")
+            self.orderByLabel.place(x = 225, y = 55)
+            self.orderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados"]
+            self.orderByDropdown = ttk.Combobox(self.filterPanel, value = self.orderByList, width = "25")
+            self.orderByDropdown.place(x = 228, y = 80)
+            self.orderByDropdown.current(0)
+            self.orderByDropdownClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.orderByDropdown))
+            self.orderByDropdownClearButton.place(x = 405, y = 78)
+
+            # [Layout] - Clear filters button
+            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Limpar todos os filtros", width = "25", command = ClearAllFilters)
+            self.clearAllFiltersButton.place(x = 468, y = 28)
+
+            # [Layout] - Apply filters button
+            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Aplicar filtros", width = "25")
+            self.clearAllFiltersButton.place(x = 468, y = 78)
+
+            # [Layout] - Recipes fieldset
+            self.recipesPanel = LabelFrame(self.tabAllRecipes, text = "Receitas", width = "640", height = "345", bd = "2")
+            self.recipesPanel.place(x = 5, y = 150)
+
+            # [Layout] - Create recipe button
+            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1")
+            self.createRecipeButton.place(x = 140, y = 10)
+
+            # [Layout] - Recipes frame
+            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280, bg = "blue")
+            self.recipesFrame.place(x = 5, y = 45)
+            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
+            self.recipesCanvas.bind("<MouseWheel>", UseMouseWheel)
+            self.recipesSecondFrame = Frame(self.recipesCanvas)
+            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = "nw")
+
+            for i in range(100):
+                Label(self.recipesSecondFrame, text = "teste").pack()
 
 class Login:
     def __init__(self, master):
@@ -238,10 +335,11 @@ class Login:
         self.labelEmail.place(x = 115, rely = 0.20, anchor = E)
         self.emailText = Entry(self.loginPanel, width = "30", textvariable = self.loginEmailInput)
         self.emailText.place(relx = 0.35, rely = 0.20, anchor = W)
+        self.emailText.focus_force()
 
         # [Layout] - Password textbox
         self.labelPassword = Label(self.loginPanel, text = "Palavra-passe:")
-        self.labelPassword.place(x = 115, rely = 0.40, anchor = E)
+        self.labelPassword.place(x = 115, rely = 0.35, anchor = E)
         self.passwordText = Entry(self.loginPanel, width = "30", show = "*", textvariable = self.loginPasswordInput)
         self.passwordText.place(relx = 0.35, rely = 0.35, anchor = W)
 
@@ -262,6 +360,15 @@ class Login:
         self.labelRegister.bind("<Button-1>", partial(self.OpenRegisterWindow))
         self.labelRegister.bind("<Enter>", partial(ChangeTextColor, self.labelRegister, "gray"))
         self.labelRegister.bind("<Leave>", partial(ChangeTextColor, self.labelRegister, "black"))
+
+        # ONLY FOR DEBUGGING - DELETE THIS
+        # ONLY FOR DEBUGGING - DELETE THIS
+        # ONLY FOR DEBUGGING - DELETE THIS
+        # ONLY FOR DEBUGGING - DELETE THIS
+        self.emailText.delete(0, END)
+        self.emailText.insert(0, "diogo@borges.pt")
+        self.passwordText.delete(0, END)
+        self.passwordText.insert(0, "diogo123")
 
     def UserLogin(self, event = None):
         try:
@@ -339,6 +446,7 @@ class Register:
         self.labelNameRegister.place(x = 115, y = 35, anchor = E)
         self.nameTextRegister = Entry(self.registerPanel, textvariable = self.nameInput, width = "30")
         self.nameTextRegister.place(relx = 0.35, y = 37.5, anchor = W)
+        self.nameTextRegister.focus_force()
 
         # [Layout] - Email textbox
         self.labelEmailRegister = Label(self.registerPanel, text = "E-mail:")
@@ -415,7 +523,8 @@ class Register:
                                                 if os.path.exists(os.getcwd() + "\\data\\user\\users_info.txt"):
                                                     with open(os.getcwd() + "\\data\\user\\users_info.txt", "r") as f:
                                                         for line in f.readlines():
-                                                            if self.registerEncryptedEmail == line.split(";")[0][0:len(line.split(";")[0]) - 10]: self.isEmailBeingUsed = True
+                                                            if self.registerEncryptedEmail == line.split(";")[0][0:len(line.split(";")[0]) - 10]:
+                                                                self.isEmailBeingUsed = True
                                                 if not self.isEmailBeingUsed:
                                                     self.doesUserWantToContinue = True
                                                     if self.registerProfilePicture.imgpath.split("\\")[-1] == "default.jpg":

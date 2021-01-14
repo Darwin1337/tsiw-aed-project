@@ -6,7 +6,6 @@ import hashlib # Usado para encriptar informações confidenciais (e-mails e pas
 import shutil # Usado para copiar ficheiros de um directório para outro
 import traceback # Usado para facilitar o debugging
 from tkinter import *
-from tkinter.ttk import Combobox
 from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã

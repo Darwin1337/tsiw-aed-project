@@ -107,6 +107,7 @@ class MainProgram:
                 if button != b: button.config(bg = "#f0f0f0")
             b.config(bg = "#a8a8a8")
             if a == 2: self.MainProgram_AllRecipesPage()
+            if a == 1: self.MainProgram_UsersRecipesPage()
 
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
@@ -210,7 +211,7 @@ class MainProgram:
         # [Layout] - Tabs (notebook)
         self.tabControl = ttk.Notebook(self.master)
         self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500, bg = "blue")
-        self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500, bg = "red")
+        self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
         self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500, bg = "yellow")
@@ -222,7 +223,243 @@ class MainProgram:
         self.tabControl.select(4)
         self.tabControl.place(x = 200, y = -23)
 
+    def MainProgram_UsersRecipesPage(self):
+        def SelectImageRecipe():
+            self.pathImageRecipe=filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
+
+        def AddNewIngredient():
+            if self.recipeIngredients.get()=="":
+                messagebox.showerror("Erro", "Tem de escrever algum ingrediente ")
+            else:
+                self.listboxRecipeIngredients.insert("end",self.recipeIngredients.get())
+                self.recipeIngredients.delete(0,"end")
+
+        def RemoveIngredient():
+            try:
+                self.selectedIngredient=self.listboxRecipeIngredients.curselection()
+                self.listboxRecipeIngredients.delete(self.selectedIngredient)
+            except:
+                messagebox.showerror("Erro", "Tem de selecionar algum ingrediente ")
+
+        def CreateRecipe():
+            self.newRecipeWindow=Tk()
+            self.newRecipeWindow.geometry("500x700")
+            self.newRecipeWindow.title("Nova receita")
+            #Label Image Recipe
+                # load = Image.open("test01.jpg")
+                # render = ImageTk.PhotoImage(load)
+                # img = Label(self, image=render)
+                # img.image = render
+                # img.place(x=300, y=20)
+            #Select Image Recipe
+            self.selectImage=Button(self.newRecipeWindow, text="Adicionar imagem",command=SelectImageRecipe)
+            self.selectImage.place(x=20,y=20)
+            #Label Frame Name and Description
+            self.nameAndDescriptionFrame=LabelFrame(self.newRecipeWindow, text="Nome e descrição", bg="blue")
+            self.nameAndDescriptionFrame.place(x=260,y=60)
+            #Label Name Recipe
+            self.recipeNameLabel=Label(self.newRecipeWindow, text="Nome da receita: ")
+            self.recipeNameLabel.place(x=20, y=70)
+            #Entry Name Recipe
+            self.recipeName=Entry(self.newRecipeWindow)
+            self.recipeName.place(x=160, y=70)
+            #Label Description Recipe
+            self.recipeDescriptionLabel=Label(self.newRecipeWindow, text="Descrição da receita: ")
+            self.recipeDescriptionLabel.place(x=20, y=120)
+            #Text Description Recipe
+            self.recipeDescription=Text(self.newRecipeWindow, height="4", width="40")
+            self.recipeDescription.place(x=160, y=120)
+            #Label Frame Ingredients 
+                # self.IngredientsFrame=LabelFrame(self.newRecipeWindow, text="Ingredientes")
+                # self.IngredientsFrame.place(x=20,y=200)
+            #Label Ingredients Recipe
+            self.recipeIngredientsLabel=Label(self.newRecipeWindow, text="Ingredientes da receita: ")
+            self.recipeIngredientsLabel.place(x=20, y=210)
+            #Entry Ingredients Recipe
+            self.recipeIngredients=Entry(self.newRecipeWindow)
+            self.recipeIngredients.place(x=160, y=210)
+            #Button Add Ingredients Recipe
+            self.addRecipeIngredients=Button(self.newRecipeWindow, text="Adicionar", command=AddNewIngredient)
+            self.addRecipeIngredients.place(x=290, y=205)
+            #Listbox Ingredients Recipe
+            self.listboxRecipeIngredients=Listbox(self.newRecipeWindow, height="6", width="26")
+            self.listboxRecipeIngredients.place(x=160,y=250)
+            #Button Remove Ingredients Recipe
+            self.removeRecipeIngredients=Button(self.newRecipeWindow, text="Remover", command=RemoveIngredient)
+            self.removeRecipeIngredients.place(x=160, y=355)
+            #Label Procedure Recipe
+            self.recipeProcedureLabel=Label(self.newRecipeWindow, text="Procedimentos:")
+            self.recipeProcedureLabel.place(x=20,y=390)
+            #Text Procedure Recipe
+            self.recipeProcedure=Text(self.newRecipeWindow, height="4", width="40")
+            self.recipeProcedure.place(x=160,y=390)
+            #Button Add Recipe
+            self.addRecipe=Button(self.newRecipeWindow, text="Adicionar", width="20")
+            self.addRecipe.place(x=160,y=500)
+
+        def ClearFilters(a):
+            if str(type(a)) == "<class 'tkinter.Entry'>": a.delete(0, END)
+            else: a.current(0)
+
+        def ClearAllFilters():
+            self.orderByDropdown.current(0)
+            self.searchByCategoryDropdown.current(0)
+            self.searchByIngredientText.delete(0, END)
+            self.searchByTitleText.delete(0, END)
+
+        def UseMouseWheel(event):
+            self.recipesCanvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
+
+        if not self.hasUserGoneToPage1:
+            self.hasUserGoneToPage1 = True
+
+            # [Layout] - Filters fieldset
+            self.filterPanel = LabelFrame(self.tabUsersRecipes, text = "Filtros de Pesquisa", width = "640", height = "135", bd = "2")
+            self.filterPanel.place(x = 5, y = 5)
+
+            # [Layout] - Search by title filter
+            self.searchByTitleLabel = Label(self.filterPanel, text = "Pesquisar por título:")
+            self.searchByTitleLabel.place(x = 5, y = 5)
+            self.searchByTitleText = Entry(self.filterPanel, width = "25")
+            self.searchByTitleText.place(x = 8, y = 30)
+            self.searchByTitleClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByTitleText))
+            self.searchByTitleClearButton.place(x = 165, y = 27)
+
+            # [Layout] - Search by ingredient filter
+            self.searchByIngredientLabel = Label(self.filterPanel, text = "Pesquisar por ingrediente:")
+            self.searchByIngredientLabel.place(x = 5, y = 55)
+            self.searchByIngredientText = Entry(self.filterPanel, width = "25")
+            self.searchByIngredientText.place(x = 8, y = 80)
+            self.searchByIngredientClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByIngredientText))
+            self.searchByIngredientClearButton.place(x = 165, y = 77)
+
+            # [Layout] - Search by category filter
+            self.searchByCategoryLabel = Label(self.filterPanel, text = "Ordernar por categoria:")
+            self.searchByCategoryLabel.place(x = 225, y = 5)
+            self.searchByCategoryList = ["Qualquer", "Vegetariano", "Bolos", "Tradicional"]
+            self.searchByCategoryDropdown = ttk.Combobox(self.filterPanel, value = self.searchByCategoryList, width = "25")
+            self.searchByCategoryDropdown.place(x = 228, y = 30)
+            self.searchByCategoryDropdown.current(0)
+            self.searchByCategoryDropdownClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.searchByCategoryDropdown))
+            self.searchByCategoryDropdownClearButton.place(x = 405, y = 28)
+
+            # [Layout] - Order by filter
+            self.orderByLabel = Label(self.filterPanel, text = "Ordernar por:")
+            self.orderByLabel.place(x = 225, y = 55)
+            self.orderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados"]
+            self.orderByDropdown = ttk.Combobox(self.filterPanel, value = self.orderByList, width = "25")
+            self.orderByDropdown.place(x = 228, y = 80)
+            self.orderByDropdown.current(0)
+            self.orderByDropdownClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(ClearFilters, self.orderByDropdown))
+            self.orderByDropdownClearButton.place(x = 405, y = 78)
+
+            # [Layout] - Clear filters button
+            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Limpar todos os filtros", width = "25", command = ClearAllFilters)
+            self.clearAllFiltersButton.place(x = 468, y = 28)
+
+            # [Layout] - Apply filters button
+            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Aplicar filtros", width = "25")
+            self.clearAllFiltersButton.place(x = 468, y = 78)
+
+            # [Layout] - Recipes fieldset
+            self.recipesPanel = LabelFrame(self.tabUsersRecipes, text = "As suas receitas", width = "640", height = "345", bd = "2")
+            self.recipesPanel.place(x = 5, y = 150)
+
+            # [Layout] - Create recipe button
+            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command=CreateRecipe)
+            self.createRecipeButton.place(x = 140, y = 10)
+
+            # [Layout] - Recipes frame
+            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
+            self.recipesFrame.place(x = 5, y = 45)
+            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
+            self.recipesCanvas.bind("<MouseWheel>", UseMouseWheel)
+            self.recipesSecondFrame = Frame(self.recipesCanvas)
+            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = "nw")
+
+            for i in range(100):
+                Label(self.recipesSecondFrame, text = "teste").pack()
+
     def MainProgram_AllRecipesPage(self):
+        def SelectImageRecipe():
+            self.pathImageRecipe=filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
+            print(self.pathImageRecipe)
+
+        def AddNewIngredient():
+            if self.recipeIngredients.get()=="":
+                messagebox.showerror("Erro", "Tem de escrever algum ingrediente ")
+            else:
+                self.listboxRecipeIngredients.insert("end",self.recipeIngredients.get())
+                self.recipeIngredients.delete(0,"end")
+
+        def RemoveIngredient():
+            try:
+                self.selectedIngredient=self.listboxRecipeIngredients.curselection()
+                self.listboxRecipeIngredients.delete(self.selectedIngredient)
+            except:
+                messagebox.showerror("Erro", "Tem de selecionar algum ingrediente ")
+
+        def CreateRecipe():
+            self.newRecipeWindow=Tk()
+            self.newRecipeWindow.geometry("500x700")
+            self.newRecipeWindow.title("Nova receita")
+            #Label Image Recipe
+                # load = Image.open("test01.jpg")
+                # render = ImageTk.PhotoImage(load)
+                # img = Label(self, image=render)
+                # img.image = render
+                # img.place(x=300, y=20)
+            #Select Image Recipe
+            self.selectImage=Button(self.newRecipeWindow, text="Adicionar imagem",command=SelectImageRecipe)
+            self.selectImage.place(x=20,y=20)
+            #Label Frame Name and Description
+            self.nameAndDescriptionFrame=LabelFrame(self.newRecipeWindow, text="Nome e descrição", bg="blue")
+            self.nameAndDescriptionFrame.place(x=260,y=60)
+            #Label Name Recipe
+            self.recipeNameLabel=Label(self.newRecipeWindow, text="Nome da receita: ")
+            self.recipeNameLabel.place(x=20, y=70)
+            #Entry Name Recipe
+            self.recipeName=Entry(self.newRecipeWindow)
+            self.recipeName.place(x=160, y=70)
+            #Label Description Recipe
+            self.recipeDescriptionLabel=Label(self.newRecipeWindow, text="Descrição da receita: ")
+            self.recipeDescriptionLabel.place(x=20, y=120)
+            #Text Description Recipe
+            self.recipeDescription=Text(self.newRecipeWindow, height="4", width="40")
+            self.recipeDescription.place(x=160, y=120)
+            #Label Frame Ingredients 
+                # self.IngredientsFrame=LabelFrame(self.newRecipeWindow, text="Ingredientes")
+                # self.IngredientsFrame.place(x=20,y=200)
+            #Label Ingredients Recipe
+            self.recipeIngredientsLabel=Label(self.newRecipeWindow, text="Ingredientes da receita: ")
+            self.recipeIngredientsLabel.place(x=20, y=210)
+            #Entry Ingredients Recipe
+            self.recipeIngredients=Entry(self.newRecipeWindow)
+            self.recipeIngredients.place(x=160, y=210)
+            #Button Add Ingredients Recipe
+            self.addRecipeIngredients=Button(self.newRecipeWindow, text="Adicionar", command=AddNewIngredient)
+            self.addRecipeIngredients.place(x=290, y=205)
+            #Listbox Ingredients Recipe
+            self.listboxRecipeIngredients=Listbox(self.newRecipeWindow, height="6", width="26")
+            self.listboxRecipeIngredients.place(x=160,y=250)
+            #Button Remove Ingredients Recipe
+            self.removeRecipeIngredients=Button(self.newRecipeWindow, text="Remover", command=RemoveIngredient)
+            self.removeRecipeIngredients.place(x=160, y=355)
+            #Label Procedure Recipe
+            self.recipeProcedureLabel=Label(self.newRecipeWindow, text="Procedimentos:")
+            self.recipeProcedureLabel.place(x=20,y=390)
+            #Text Procedure Recipe
+            self.recipeProcedure=Text(self.newRecipeWindow, height="4", width="40")
+            self.recipeProcedure.place(x=160,y=390)
+            #Button Add Recipe
+            self.addRecipe=Button(self.newRecipeWindow, text="Adicionar", width="20")
+            self.addRecipe.place(x=160,y=500)
+
         def ClearFilters(a):
             if str(type(a)) == "<class 'tkinter.Entry'>": a.delete(0, END)
             else: a.current(0)
@@ -292,11 +529,11 @@ class MainProgram:
             self.recipesPanel.place(x = 5, y = 150)
 
             # [Layout] - Create recipe button
-            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1")
+            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command=CreateRecipe)
             self.createRecipeButton.place(x = 140, y = 10)
 
             # [Layout] - Recipes frame
-            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280, bg = "blue")
+            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
             self.recipesFrame.place(x = 5, y = 45)
             self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
             self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
@@ -310,7 +547,7 @@ class MainProgram:
 
             for i in range(100):
                 Label(self.recipesSecondFrame, text = "teste").pack()
-
+            
 class Login:
     def __init__(self, master):
         # [Initial configuration]

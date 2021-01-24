@@ -24,13 +24,21 @@ def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data\\user"): os.mkdir(os.getcwd() + "\\data\\user")
     if not os.path.exists(os.getcwd() + "\\data\\images"): os.mkdir(os.getcwd() + "\\data\\images")
 
-def MD5Checksum():
-    if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
-        md5hash = hashlib.md5(Image.open(os.getcwd() + "\\data\\images\\default.jpg").tobytes())
-        return str(md5hash.hexdigest())
-    else:
-        messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
-        os._exit(0)
+def MD5Checksum(img):
+    if img == 1:
+        if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
+            md5hash = hashlib.md5(Image.open(os.getcwd() + "\\data\\images\\default.jpg").tobytes())
+            return str(md5hash.hexdigest())
+        else:
+            messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
+            os._exit(0)
+    elif img == 2:
+        if os.path.exists(os.getcwd() + "\\data\\images\\default_recipes.jpg"):
+            md5hash = hashlib.md5(Image.open(os.getcwd() + "\\data\\images\\default_recipes.jpg").tobytes())
+            return str(md5hash.hexdigest())
+        else:
+            messagebox.showerror("Erro", "O ficheiro 'data\images\default_recipes.jpg' está em falta\nO programa irá fechar")
+            os._exit(0)
 
 def CenterWindow(target):
     target.update_idletasks()
@@ -86,13 +94,13 @@ class MainProgram:
         for widget in widgetsList: widget.destroy()
 
     def ExitProgram(self):
-        self.exitPrompt = messagebox.askquestion ("Sair", "Tem a certeza que prentende sair do programa?", icon = "warning")
+        self.exitPrompt = messagebox.askquestion ("Sair", "Tem a certeza que prentende sair do programa?", icon = "warning", parent = self.master)
         if self.exitPrompt == "yes":
             os._exit(0)
 
     def MainProgram_Authentication(self):
         if self.loggedInUserInformation[0]:
-            self.logoutPrompt = messagebox.askquestion ("Terminar sessão", "Tem a certeza que prentende terminar sessão?", icon = "warning")
+            self.logoutPrompt = messagebox.askquestion ("Terminar sessão", "Tem a certeza que prentende terminar sessão?", icon = "warning", parent = self.master)
             if self.logoutPrompt == "yes":
                 self.loggedInUserInformation[0] = False
                 self.MainProgram_Authentication()
@@ -142,16 +150,16 @@ class MainProgram:
                 break
         if not self.wasPhotoFound:
             if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
-                if MD5Checksum() == "28c17e68aa44166d1c8e716bd535676a":
+                if MD5Checksum(1) == "28c17e68aa44166d1c8e716bd535676a":
                     self.profilePicture = Label(self.master)
                     self.profilePicture.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
                     self.profilePicture["image"] = self.profilePicture.image
                     self.profilePicture.place(x = 60, y = 20)
                 else:
-                    messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar")
+                    messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
                     os._exit(0)
             else:
-                messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar")
+                messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar", parent = self.master)
                 os._exit(0)
 
         # [Layout] - Sidebar > User's first and last name
@@ -374,38 +382,9 @@ class MainProgram:
             self.recipesCanvas.bind("<MouseWheel>", partial(UseMouseWheel, self.recipesCanvas))
             self.recipesSecondFrame = Frame(self.recipesCanvas)
             self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = "nw")
-            
-            def ShowNumber(x):
-                print(x)
-                self.recipeWindow=Tk()
-                self.recipeWindow.geometry("500x700")
-                self.recipeWindow.title("Receita")
-                self.recipeName=Label(self.recipeWindow, text="Nome da receita", )
-                self.recipeName.place(x=10, y=150)
-                self.recipeName.config(font=('Helvetica 20 bold'))
-                self.recipeDescription=Label(self.recipeWindow, text="Descrição da receita")
-                self.recipeDescription.place(x=10,y=200)
-                self.recipeIngredients=Label(self.recipeWindow, text="Ingredientes: 100gr pão, 50gr de queijo...")
-                self.recipeIngredients.place(x=10,y=300)
-                self.recipePreparationMode=Label(self.recipeWindow, text="Preparação: Modo de preparação")
-                self.recipePreparationMode.place(x=10,y=350)
-                
+
             for i in range(100):
-                self.allRecipeCard = Frame(self.recipesSecondFrame, width="590", height="80", highlightbackground="black", highlightthickness=1)
-                self.allRecipeCard.pack(pady=3)
-                self.allRecipePictureCanvas=Canvas(self.allRecipeCard, width = "65", height = "65")
-                self.allRecipePictureCanvas.place(x=10,y=5)
-                self.allRecipePictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-                self.allRecipePictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipePictureCanvas.imgpath).resize((65,65)))
-                self.allRecipePictureCanvas.create_image(0, 0, image = self.allRecipePictureCanvas.image, anchor = NW)
-                self.allRecipiName=Label(self.allRecipeCard, text="ola")
-                self.allRecipiName.place(x=90,y=5)
-                self.allRecipiLikes=Label(self.allRecipeCard, text="Likes: ")
-                self.allRecipiLikes.place(x=90,y=55)
-                self.allRecipiCreator=Label(self.allRecipeCard, text="Criado por: Diogo Borges, 24/01/2021")
-                self.allRecipiCreator.place(x=200,y=55)
-                self.allRecipiSeeMore=Button(self.allRecipeCard, text="Ver mais", command=partial(ShowNumber,i))
-                self.allRecipiSeeMore.place(x=500,y=27)
+                Label(self.recipesSecondFrame, text = "teste").pack()
 
     def MainProgram_GlobalFunctions(self, func, *arg):
         def ClearFilters(a):
@@ -518,24 +497,24 @@ class Login:
                                                 if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]: self.loggedInSucessInfo += "\nTipo: utilizador"
                                                 else: self.loggedInSucessInfo += "\nTipo: admin"
                                                 app.loggedInUserInformation.append(self.loggedInSucessInfo.replace(" ", "").split(":")[-1])
-                                                messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\n\nBem-vindo!" + self.loggedInSucessInfo)
+                                                # messagebox.showinfo("Sucesso", "Sessão iniciada com sucesso!\n\nBem-vindo!" + self.loggedInSucessInfo)
                                                 # Close login window and open main program back up
                                                 self.master.destroy()
                                                 app.master.update()
                                                 app.master.deiconify()
                                                 app.MainProgram_FrontPage()
-                                            else: messagebox.showerror("Erro", "A palavra-passe introduzida está incorreta")
-                                if not self.wasAccountFound: messagebox.showerror("Erro", "O e-mail introduzido não foi encontrado")
-                            else: messagebox.showerror("Erro", "As informações inseridas não foram encontradas")
-                        else: messagebox.showerror("Erro", "O campo de palavra-passe tem de ter 8 ou mais caracteres")
-                    else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-                else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-            else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
+                                            else: messagebox.showerror("Erro", "A palavra-passe introduzida está incorreta", parent = self.master)
+                                if not self.wasAccountFound: messagebox.showerror("Erro", "O e-mail introduzido não foi encontrado", parent = self.master)
+                            else: messagebox.showerror("Erro", "As informações inseridas não foram encontradas", parent = self.master)
+                        else: messagebox.showerror("Erro", "O campo de palavra-passe tem de ter 8 ou mais caracteres", parent = self.master)
+                    else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
+                else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
+            else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
         except Exception as err:
             print("Error:\n" + str(err) + "\n")
             print("Traceback:")
             traceback.print_exc()
-            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
 
     def OpenRegisterWindow(self, event):
         self.master.withdraw()
@@ -596,11 +575,11 @@ class Register:
         CreatePath()
 
         # [Layout] - Verifies if the default image exists and/or has been tampered with
-        if MD5Checksum() == self.defaultProfilePicture:
+        if MD5Checksum(1) == self.defaultProfilePicture:
             self.registerProfilePicture.imgpath = os.getcwd() + "\\data\\images\\default.jpg"
             self.registerProfilePicture.image = ImageTk.PhotoImage(Image.open(self.registerProfilePicture.imgpath).resize((50, 50)))
         else:
-            messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar")
+            messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
             os._exit(0)
         self.registerProfilePicture["image"] = self.registerProfilePicture.image
         self.registerProfilePicture.place(x = 142, y = 217.5, anchor = W)
@@ -650,32 +629,32 @@ class Register:
                                                 if not self.isEmailBeingUsed:
                                                     self.doesUserWantToContinue = True
                                                     if self.registerProfilePicture.imgpath.split("\\")[-1] == "default.jpg":
-                                                        self.continueDefault = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de perfil, se continuar irá ser selecionada a foto de perfil padrão, prosseguir?", icon = "warning")
+                                                        self.continueDefault = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de perfil, se continuar irá ser selecionada a foto de perfil padrão, prosseguir?", icon = "warning", parent = self.master)
                                                         if self.continueDefault == "no": self.doesUserWantToContinue = False
                                                         else:
-                                                            if MD5Checksum() != self.defaultProfilePicture:
-                                                                messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar")
+                                                            if MD5Checksum(1) != self.defaultProfilePicture:
+                                                                messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
                                                                 os._exit(0)
                                                     if self.doesUserWantToContinue:
                                                         shutil.copy2(self.registerProfilePicture.imgpath, os.getcwd() + "\\data\\images\\" + self.registerEncryptedEmail[:15] + os.path.splitext(self.registerProfilePicture.imgpath)[1])
                                                         with open(os.getcwd() + "\\data\\user\\users_info.txt", "a") as f:
                                                             f.write(self.registerEncryptedEmail + EncryptSHA256("user")[:10] + ";" + EncryptSHA256(self.registerPassword) + ";" + EncryptString(self.registerName, self.registerEncryptedEmail) + "\n")
-                                                        messagebox.showinfo("Sucesso", "O registo foi concluído com sucesso")
-                                                else: messagebox.showerror("Erro", "O e-mail introduzido já está registado na plataforma")
-                                            else: messagebox.showerror("Erro", "A palavra-passe escolhida tem de ter 8 ou mais caracteres")
-                                        else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-                                    else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-                                else: messagebox.showerror("Erro", "O e-mail introduzido não é válido")
-                            else: messagebox.showerror("Erro", "O campo de nome não pode exceder os 55 caracteres")
-                        else: messagebox.showerror("Erro", "O campo de nome não pode conter caracteres especiais nem números")
-                    else: messagebox.showerror("Erro", "O nome introduzido é inválido")
-                else: messagebox.showerror("Erro", "Introduza, pelo menos, o primeiro e último nome")
-            else: messagebox.showerror("Erro", "O nome introduzido é inválido")
+                                                        messagebox.showinfo("Sucesso", "O registo foi concluído com sucesso", parent = self.master)
+                                                else: messagebox.showerror("Erro", "O e-mail introduzido já está registado na plataforma", parent = self.master)
+                                            else: messagebox.showerror("Erro", "A palavra-passe escolhida tem de ter 8 ou mais caracteres", parent = self.master)
+                                        else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
+                                    else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
+                                else: messagebox.showerror("Erro", "O e-mail introduzido não é válido", parent = self.master)
+                            else: messagebox.showerror("Erro", "O campo de nome não pode exceder os 55 caracteres", parent = self.master)
+                        else: messagebox.showerror("Erro", "O campo de nome não pode conter caracteres especiais nem números", parent = self.master)
+                    else: messagebox.showerror("Erro", "O nome introduzido é inválido", parent = self.master)
+                else: messagebox.showerror("Erro", "Introduza, pelo menos, o primeiro e último nome", parent = self.master)
+            else: messagebox.showerror("Erro", "O nome introduzido é inválido", parent = self.master)
         except Exception as err:
             print("Error:\n" + str(err) + "\n")
             print("Traceback:")
             traceback.print_exc()
-            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+            #messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
 
     def SelectPicture(self, origin):
         self.imageCheck, self.path = False, filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
@@ -683,7 +662,7 @@ class Register:
             try:
                 Image.open(self.path).verify()
                 self.imageCheck = True
-            except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem")
+            except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem", parent = self.master)
             if self.imageCheck:
                 try:
                     if Image.open(self.path).size[0] == Image.open(self.path).size[1]:
@@ -692,11 +671,11 @@ class Register:
                                 origin.imgpath = self.path
                                 origin.image = ImageTk.PhotoImage(Image.open(origin.imgpath).resize((50, 50)))
                                 origin["image"] = origin.image
-                            else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb")
-                        else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px")
-                    else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais")
-                except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema")
-                except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido")
+                            else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.master)
+                        else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px", parent = self.master)
+                    else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais", parent = self.master)
+                except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema", parent = self.master)
+                except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
 
     def BackToLogin(self, event):
         self.master.destroy()
@@ -706,74 +685,140 @@ class Register:
 class Recipe:
     def __init__(self, master):
         self.master = master
-        self.master.geometry("500x700")
+        self.master.geometry("500x625")
         CenterWindow(self.master)
         self.master.title("Nova receita")
+        self.master.resizable(False, False)
+        self.master.grab_set()
         self.master.focus_force()
         # self.master.bind('<Return>', self.UserRegister)
 
-        # [Layout] - Select recipe image button
-        self.selectRecipeImageButton = Button(self.master, text = "Adicionar imagem", command = self.SelectRecipeImage)
-        self.selectRecipeImageButton.place(x = 20, y = 20)
-
         # [Layout] - Recipe general information fieldset
-        self.nameAndDescriptionFrame = LabelFrame(self.master, text = "Informação Geral", bg = "blue")
-        self.nameAndDescriptionFrame.place(x = 260, y = 60)
+        self.generalInformationLabelFrame = LabelFrame(self.master, text = "Informação Geral", width = "490", height = "280", bd = "2")
+        self.generalInformationLabelFrame.place(x = 5, y = 5)
 
         # [Layout] - Recipe name
-        self.recipeNameLabel = Label(self.master, text = "Nome da receita:")
-        self.recipeNameLabel.place(x = 20, y = 70)
-        self.recipeNameText = Entry(self.master)
-        self.recipeNameText.place(x = 160, y = 70)
+        self.recipeNameLabel = Label(self.generalInformationLabelFrame, text = "Nome da receita:")
+        self.recipeNameLabel.place(x = 130, y = 35, anchor = E)
+        self.recipeNameText = Entry(self.generalInformationLabelFrame, width = "45")
+        self.recipeNameText.place(x = 150, y = 37.5, anchor = W)
 
         # [Layout] - Recipe description
-        self.recipeDescriptionLabel = Label(self.master, text = "Descrição da receita: ")
-        self.recipeDescriptionLabel.place(x = 20, y = 120)
-        self.recipeDescriptionText = Text(self.master, height = "4", width = "40")
-        self.recipeDescriptionText.place(x = 160, y = 120)
+        self.recipeDescriptionLabel = Label(self.generalInformationLabelFrame, text = "Descrição da receita:")
+        self.recipeDescriptionLabel.place(x = 130, y = 70, anchor = E)
+        self.recipeDescriptionText = Text(self.generalInformationLabelFrame, height = "4", width = "34")
+        self.recipeDescriptionText.place(x = 150, y = 97.5, anchor = W)
+
+        # [Layout] - Recipe picture
+        self.labelSelectRecipeImage = Label(self.generalInformationLabelFrame, text = "Foto do prato:")
+        self.labelSelectRecipeImage.place(x = 130, y = 155, anchor = E)
+        self.recipePictureCanvas = Canvas(self.generalInformationLabelFrame, width = "100", height = "100")
+        self.recipePictureCanvas.place(x = 150, y = 200, anchor = W)
+        CreatePath()
+
+        # [Layout] - Verifies if the default image exists and/or has been tampered with
+        if str(MD5Checksum(2)) == "8b53223e6b0ba3a1564ef2a5397bb03e":
+            self.recipePictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+            self.recipePictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipePictureCanvas.imgpath).resize((100, 100)))
+        else:
+            messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
+            os._exit(0)
+
+        self.recipePictureCanvas.create_image(0, 0, image = self.recipePictureCanvas.image, anchor = NW)
+        self.selectRecipeImageButton = ttk.Button(self.generalInformationLabelFrame, text = "Enviar imagem", command = self.SelectRecipeImage)
+        self.selectRecipeImageButton.place(x = 265, y = 164, anchor = W, width = 117)
+        self.selectRecipeImageInfo = Label(self.generalInformationLabelFrame, text = ".jpg .jpeg ou .png", wraplength = 200, justify = LEFT, font=(None, 8))
+        self.selectRecipeImageInfo.place(x = 265, y = 195, anchor = W)
+        self.selectRecipeImageInfo2 = Label(self.generalInformationLabelFrame, text = "Atenção: Nem a largura nem a altura da imagem devem ser inferiores a 100px", wraplength = 150, justify = LEFT, font=(None, 8))
+        self.selectRecipeImageInfo2.place(x = 265, y = 230, anchor = W)
+
+        # [Layout] - Recipe ingredients fieldset
+        self.ingredientsLabelFrame = LabelFrame(self.master, text = "Ingredientes", width = "490", height = "130", bd = "2")
+        self.ingredientsLabelFrame.place(x = 5, y = 300)
 
         # [Layout] - Recipe ingredients
-        self.recipeIngredientsLabel = Label(self.master, text = "Ingredientes da receita: ")
-        self.recipeIngredientsLabel.place(x = 20, y = 210)
-        self.recipeIngredientsText = Entry(self.master)
-        self.recipeIngredientsText.place(x = 160, y = 210)
+        self.recipeIngredientsLabel = Label(self.ingredientsLabelFrame, text = "Lista de ingredientes:")
+        self.recipeIngredientsLabel.place(x = 130, y = 20, anchor = E)
+
+        # [Layout] - Ingredients list
+        self.listboxRecipeIngredients = Listbox(self.ingredientsLabelFrame, height = "5", width = "46")
+        self.listboxRecipeIngredients.place(x = 149, y = 58, anchor = W)
 
         # [Layout] - Add ingredients button
-        self.addRecipeIngredients = Button(self.master, text = "Adicionar", command = self.AddNewIngredient)
-        self.addRecipeIngredients.place(x = 290, y = 205)
-        self.listboxRecipeIngredients = Listbox(self.master, height = "6", width = "26")
-        self.listboxRecipeIngredients.place(x = 160, y = 250)
+        self.addRecipeIngredients = ttk.Button(self.ingredientsLabelFrame, text = "Adicionar", width = "17", command = self.AddNewIngredient)
+        self.addRecipeIngredients.place(x = 15, y = 40)
 
         # [Layout] - Remove ingredients button
-        self.removeRecipeIngredients = Button(self.master, text = "Remover", command = self.RemoveIngredient)
-        self.removeRecipeIngredients.place(x = 160, y = 355)
+        self.removeRecipeIngredients = ttk.Button(self.ingredientsLabelFrame, text = "Remover", width = "17", command = self.RemoveIngredient)
+        self.removeRecipeIngredients.place(x = 15, y = 72)
 
-        # [Layout] - Recipe procedure
-        self.recipeProcedureLabel = Label(self.master, text = "Procedimentos:")
-        self.recipeProcedureLabel.place(x=20,y=390)
-        self.recipeProcedureText = Text(self.master, height = "4", width = "40")
-        self.recipeProcedureText.place(x=160,y=390)
+        # [Layout] - Recipe procedure fieldset
+        self.recipeProcedureLabelFrame = LabelFrame(self.master, text = "Procedimentos", width = "490", height = "110", bd = "2")
+        self.recipeProcedureLabelFrame.place(x = 5, y = 450)
+
+        # [Layout] - Recipe procedure textbox
+        self.recipeProcedureLabel = Label(self.recipeProcedureLabelFrame, text = "Procedimentos:")
+        self.recipeProcedureLabel.place(x = 130, y = 20, anchor = E)
+        self.recipeProcedureText = Text(self.recipeProcedureLabelFrame, height = "4", width = "34")
+        self.recipeProcedureText.place(x = 150, y = 47.5, anchor = W)
 
         # [Layout] - Add recipe button
-        self.addRecipe = Button(self.master, text = "Adicionar", width = "20")
-        self.addRecipe.place(x=160,y=500)
+        self.addRecipe = Button(self.master, text = "Adicionar", relief = "groove", width = "20", height = "2")
+        self.addRecipe.place(x = 175, y = 570)
 
     def SelectRecipeImage(self):
         self.pathImageRecipe = filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
 
     def AddNewIngredient(self):
-        if not self.recipeIngredientsText.get():
-            messagebox.showerror("Erro", "Introduza algum ingrediente")
-        else:
-            self.listboxRecipeIngredients.insert(END, self.recipeIngredientsText.get())
-            self.recipeIngredientsText.delete(0, END)
+        def Adicionar():
+            if not self.recipeIngredientsText.get():
+                messagebox.showerror("Erro", "Introduza algum ingrediente", parent = self.addNewIngredientWindow)
+            else:
+                if self.listboxRecipeIngredients.size() < 30:
+                    self.listboxRecipeIngredients.insert(END, self.recipeIngredientsText.get())
+                    self.addNewIngredientWindow.destroy()
+                    self.master.update()
+                    self.master.grab_set()
+                else: messagebox.showerror("Erro", "Atingiu o limite máximo de ingredientes (30)", parent = self.addNewIngredientWindow)
+
+        def DoNothing():
+            pass
+
+        def CloseWindow():
+            self.addNewIngredientWindow.destroy()
+            self.master.update()
+            self.master.grab_set()
+
+        # [Layout] - Add ingredient window
+        self.addNewIngredientWindow = Toplevel(self.master)
+        self.addNewIngredientWindow.geometry("250x100")
+        CenterWindow(self.addNewIngredientWindow)
+        self.addNewIngredientWindow.title("Adicionar Ingrediente")
+        self.addNewIngredientWindow.resizable(False, False)
+        self.addNewIngredientWindow.grab_set()
+        self.addNewIngredientWindow.protocol("WM_DELETE_WINDOW", DoNothing)
+
+        # [Layout] - Add new ingredient textbox
+        self.recipeIngredientsLabel = Label(self.addNewIngredientWindow, text = "Nome do ingrediente:")
+        self.recipeIngredientsLabel.place(x = 60, y = 10)
+        self.recipeIngredientsText = Entry(self.addNewIngredientWindow, width = 35)
+        self.recipeIngredientsText.place(x = 18, y = 35)
+        self.recipeIngredientsText.focus_force()
+
+        # [Layout] - Add new ingredient button
+        self.recipeIngredientsButton = ttk.Button(self.addNewIngredientWindow, text = "Adicionar", command = Adicionar)
+        self.recipeIngredientsButton.place(x = 40, y = 65)
+
+        # [Layout] - Close window button
+        self.closeWindowButton = ttk.Button(self.addNewIngredientWindow, text = "Fechar", command = CloseWindow)
+        self.closeWindowButton.place(x = 135, y = 65)
 
     def RemoveIngredient(self):
         try:
             self.selectedIngredient = self.listboxRecipeIngredients.curselection()
             self.listboxRecipeIngredients.delete(self.selectedIngredient)
         except:
-            messagebox.showerror("Erro", "Selecione um ingrediente para remover")
+            messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.master)
 
 if __name__ == '__main__':
     root = Tk()

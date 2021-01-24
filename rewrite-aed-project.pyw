@@ -374,9 +374,24 @@ class MainProgram:
             self.recipesCanvas.bind("<MouseWheel>", partial(UseMouseWheel, self.recipesCanvas))
             self.recipesSecondFrame = Frame(self.recipesCanvas)
             self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = "nw")
+            
+            def ShowNumber(x):
+                print(x)
 
             for i in range(100):
-                Label(self.recipesSecondFrame, text = "teste").pack()
+                self.allRecipeCard = Frame(self.recipesSecondFrame, width="590", height="80", highlightbackground="black", highlightthickness=1)
+                self.allRecipeCard.pack(pady=3)
+                self.allRecipePictureCanvas=Canvas(self.allRecipeCard, width = "65", height = "65")
+                self.allRecipePictureCanvas.place(x=10,y=5)
+                self.allRecipePictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                self.allRecipePictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipePictureCanvas.imgpath).resize((65,65)))
+                self.allRecipePictureCanvas.create_image(0, 0, image = self.allRecipePictureCanvas.image, anchor = NW)
+                self.allRecipiName=Label(self.allRecipeCard, text="ola")
+                self.allRecipiName.place(x=90,y=5)
+                self.allRecipiLikes=Label(self.allRecipeCard, text="Likes: ")
+                self.allRecipiLikes.place(x=90,y=55)
+                self.allRecipiSeeMore=Button(self.allRecipeCard, text="Ver mais", command=partial(ShowNumber,i))
+                self.allRecipiSeeMore.place(x=500,y=27)
 
     def MainProgram_GlobalFunctions(self, func, *arg):
         def ClearFilters(a):

@@ -377,7 +377,19 @@ class MainProgram:
             
             def ShowNumber(x):
                 print(x)
-
+                self.recipeWindow=Tk()
+                self.recipeWindow.geometry("500x700")
+                self.recipeWindow.title("Receita")
+                self.recipeName=Label(self.recipeWindow, text="Nome da receita", )
+                self.recipeName.place(x=10, y=150)
+                self.recipeName.config(font=('Helvetica 20 bold'))
+                self.recipeDescription=Label(self.recipeWindow, text="Descrição da receita")
+                self.recipeDescription.place(x=10,y=200)
+                self.recipeIngredients=Label(self.recipeWindow, text="Ingredientes: 100gr pão, 50gr de queijo...")
+                self.recipeIngredients.place(x=10,y=300)
+                self.recipePreparationMode=Label(self.recipeWindow, text="Preparação: Modo de preparação")
+                self.recipePreparationMode.place(x=10,y=350)
+                
             for i in range(100):
                 self.allRecipeCard = Frame(self.recipesSecondFrame, width="590", height="80", highlightbackground="black", highlightthickness=1)
                 self.allRecipeCard.pack(pady=3)
@@ -390,6 +402,8 @@ class MainProgram:
                 self.allRecipiName.place(x=90,y=5)
                 self.allRecipiLikes=Label(self.allRecipeCard, text="Likes: ")
                 self.allRecipiLikes.place(x=90,y=55)
+                self.allRecipiCreator=Label(self.allRecipeCard, text="Criado por: Diogo Borges, 24/01/2021")
+                self.allRecipiCreator.place(x=200,y=55)
                 self.allRecipiSeeMore=Button(self.allRecipeCard, text="Ver mais", command=partial(ShowNumber,i))
                 self.allRecipiSeeMore.place(x=500,y=27)
 

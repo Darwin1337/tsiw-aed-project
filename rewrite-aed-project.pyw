@@ -142,9 +142,10 @@ class MainProgram:
             for button in existingButtons:
                 if button != b: button.config(bg = "#f0f0f0")
             b.config(bg = "#a8a8a8")
-            if a == 2: self.MainProgram_AllRecipesPage()
+            if a == 0: self.MainProgram_EditProfile()
             if a == 1: self.MainProgram_UsersRecipesPage()
-
+            if a == 2: self.MainProgram_AllRecipesPage()
+            
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
         self.hasUserGoneToPage1 = False
@@ -246,7 +247,7 @@ class MainProgram:
 
         # [Layout] - Tabs (notebook)
         self.tabControl = ttk.Notebook(self.master)
-        self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500, bg = "blue")
+        self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
@@ -258,6 +259,38 @@ class MainProgram:
         self.tabControl.add(self.tabUsersNotifications)
         self.tabControl.select(4)
         self.tabControl.place(x = 200, y = -23)
+
+    def MainProgram_EditProfile(self):
+        if not self.hasUserGoneToPage0:
+            self.hasUserGoneToPage0 = True
+
+            # [Layout] - Title
+            self.editNameLabel=Label(self.tabEditProfile, text="Editar Perfil")
+            self.editNameLabel.place(x=230,y=40)
+            self.editNameLabel.config(font = ('Helvetica 15 bold'))
+
+            # [Layout] - Edit Name
+            self.editNameLabel=Label(self.tabEditProfile, text="Nome")
+            self.editNameLabel.place(x=198,y=130)
+            self.editNameEntry=Entry(self.tabEditProfile, width="30")
+            self.editNameEntry.place(x=260,y=130)
+
+            # [Layout] - Edit Email
+            self.editEmailLabel=Label(self.tabEditProfile, text="Email")
+            self.editEmailLabel.place(x=200,y=180)
+            self.editEmailEntry=Entry(self.tabEditProfile, width="30")
+            self.editEmailEntry.place(x=260,y=180)
+
+            # [Layout] - Edit Password
+            self.editPasswordLabel=Label(self.tabEditProfile, text="Password")
+            self.editPasswordLabel.place(x=180,y=230)
+            self.editPasswordEntry=Entry(self.tabEditProfile, width="30")
+            self.editPasswordEntry.place(x=260,y=230)
+
+            # [Layout] - Update Button
+            self.editProfileButton=ttk.Button(self.tabEditProfile, text="Atualizar")
+            self.editProfileButton.place(x=260,y=290)
+
 
     def MainProgram_UsersRecipesPage(self):
         if not self.hasUserGoneToPage1:
@@ -454,7 +487,7 @@ class MainProgram:
     def MainProgram_AddRecipe(self):
         self.newRecipeWindow = Toplevel(self.master)
         self.app = Recipe(self.newRecipeWindow)
-
+    
     def MainProgram_ShowRecipeDetails(self):
         def LikeRecipe():
             if self.likeButton.currentImg == "heartIcon2.png":
@@ -480,42 +513,44 @@ class MainProgram:
 
         # [Initial configuration]
         self.recipeDetailsWindow = Toplevel(self.master)
-        self.recipeDetailsWindow.geometry("500x1000")
+        self.recipeDetailsWindow.geometry("900x600")
         CenterWindow(self.recipeDetailsWindow)
         self.recipeDetailsWindow.title("Receita")
         self.recipeDetailsWindow.resizable(False, False)
         self.recipeDetailsWindow.grab_set()
         self.recipeDetailsWindow.focus_force()
         self.recipeDetailsWindow.protocol("WM_DELETE_WINDOW", RecipeDetailsCustomClose)
-
-        # Alterar lugar da imagem!!!!!!
-        # Alterar lugar da imagem!!!!!!
-        # Alterar lugar da imagem!!!!!!
+        
+        self.recipeDetailsPictureCanvas = Canvas(self.recipeDetailsWindow, width = "110", height = "110")
+        self.recipeDetailsPictureCanvas.place(x = 320, y = 5)
+        self.recipeDetailsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+        self.recipeDetailsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipeDetailsPictureCanvas.imgpath).resize((110, 110)))
+        self.recipeDetailsPictureCanvas.create_image(55,55, image = self.recipeDetailsPictureCanvas.image, anchor = CENTER)
 
         # [Layout] - Recipe title
-        self.recipeDetailsName = Label(self.recipeDetailsWindow, text = "Nome da receita")
-        self.recipeDetailsName.place(x = 10, y = 150)
+        self.recipeDetailsName = Label(self.recipeDetailsWindow, text = "Nome da receita", wraplength = 280, justify = LEFT)
+        self.recipeDetailsName.place(x = 10, y = 5)
         self.recipeDetailsName.config(font = ('Helvetica 15 bold'))
 
         # [Layout] - Recipe description
         self.recipeDetailsDescriptionLabel = Label(self.recipeDetailsWindow, text = "Descrição da receita")
-        self.recipeDetailsDescriptionLabel.place(x = 10, y = 200)
-        self.recipeDetailsDescriptionText = Text(self.recipeDetailsWindow, width = "67", height = "4")
-        self.recipeDetailsDescriptionText.place(x = 10, y = 230)
+        self.recipeDetailsDescriptionLabel.place(x = 10, y = 70)
+        self.recipeDetailsDescriptionText = Text(self.recipeDetailsWindow, width = "45", height = "7")
+        self.recipeDetailsDescriptionText.place(x = 10, y = 100)
         self.recipeDetailsDescriptionText.insert(END, "asdasdasd")
         self.recipeDetailsDescriptionText.config(state = DISABLED, font = ('TkDefaultFont'))
 
         # [Layout] - Recipe ingredients
         self.recipeDetailsIngredientsLabel = Label(self.recipeDetailsWindow, text = "Ingredientes")
-        self.recipeDetailsIngredientsLabel.place(x = 10, y = 300)
+        self.recipeDetailsIngredientsLabel.place(x = 300, y = 240)
         self.recipeDetailsIngredientsList = Listbox(self.recipeDetailsWindow, height = "7")
-        self.recipeDetailsIngredientsList.place(x = 10, y = 330)
+        self.recipeDetailsIngredientsList.place(x = 300, y = 270)
 
         # [Layout] - Recipe procedure
         self.recipeDetailsPreparationModeLabel = Label(self.recipeDetailsWindow, text = "Preparação")
-        self.recipeDetailsPreparationModeLabel.place(x = 10, y = 450)
-        self.recipeDetailsPreparationModeText = Text(self.recipeDetailsWindow, width = "67", height = "4")
-        self.recipeDetailsPreparationModeText.place(x = 10, y = 480)
+        self.recipeDetailsPreparationModeLabel.place(x = 10, y = 240)
+        self.recipeDetailsPreparationModeText = Text(self.recipeDetailsWindow, width = "45", height = "7")
+        self.recipeDetailsPreparationModeText.place(x = 10, y = 270)
         self.recipeDetailsPreparationModeText.insert(END, "asdasdasd")
         self.recipeDetailsPreparationModeText.config(state = DISABLED, font = ('TkDefaultFont'))
 
@@ -533,24 +568,24 @@ class MainProgram:
         self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30, 30)))
         self.likeButton = Button(self.recipeDetailsWindow, image = self.likeImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = LikeRecipe)
         self.likeButton.currentImg = "heartIcon2.png"
-        self.likeButton.place(x = 10, y = 550)
+        self.likeButton.place(x = 10, y = 400)
 
         # [Layout] - Recipe interaction - favorites
         self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30, 30)))
         self.favButton = Button(self.recipeDetailsWindow, image = self.favImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
         self.favButton.currentImg = "favIcon2.png"
-        self.favButton.place(x = 50, y = 550)
+        self.favButton.place(x = 50, y = 400)
 
-        # Adicionar uma label para as views!!!
-        # Adicionar uma label para as views!!!
-        # Adicionar uma label para as views!!!
+        # [Layout] - Recipe interaction - views
+        self.viewsLabel=Label(self.recipeDetailsWindow, text="Visualizações: ")
+        self.viewsLabel.place(x = 90, y = 405)
+        self.commentsLabelFrame=LabelFrame(self.recipeDetailsWindow, width="390", height="400", text="Comentários")
+        self.commentsLabelFrame.place(x=440, y=10)
 
         # [Layout] - Recipe interaction - users comments
-        self.commentsLabel = Label(self.recipeDetailsWindow, text = "Comentários")
-        self.commentsLabel.place(x = 10, y = 610)
-        self.commentsFrame = Frame(self.recipeDetailsWindow, width = 500, height = 100)
-        self.commentsFrame.place(x = 10, y = 640)
-        self.commentsCanvas = Canvas(self.commentsFrame, width = 470)
+        self.commentsFrame = Frame(self.commentsLabelFrame, width = 390, height = 100)
+        self.commentsFrame.place(x = 10, y = 10)
+        self.commentsCanvas = Canvas(self.commentsFrame, width = 355, height=350)
         self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
         self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
         self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
@@ -559,18 +594,15 @@ class MainProgram:
         self.commentsSecondFrame = Frame(self.commentsCanvas)
         self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = NW)
 
-        for i in range(5):
-            self.allComments = Frame(self.commentsSecondFrame, width = "470", height = "60", highlightbackground = "black", highlightthickness = 1)
+        for i in range(10):
+            self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "60", highlightbackground = "black", highlightthickness = 1)
             self.allComments.pack(pady = 3)
 
         # [Layout] - Recipe interaction - comment textbox
-        self.commentArea = Text(self.recipeDetailsWindow, width = "57", height = "2" )
-        self.commentArea.place(x = 10, y = 950)
-        self.commentAreaLabel = Label(self.recipeDetailsWindow, text = "Comentar")
-        self.commentAreaLabel.place(x = 10, y = 920)
-
-        # self.teste = Text(self.recipeDetailsWindow, state = DISABLED)
-        # self.teste.place(x = 50, y = 550)
+        self.commentArea = Text(self.recipeDetailsWindow, width = "40", height = "2")
+        self.commentArea.place(x = 440, y = 430)
+        self.addCommentIcon = ttk.Button(self.recipeDetailsWindow, text="Add")
+        self.addCommentIcon.place(x = 770, y = 435)
 
 class Login:
     def __init__(self, master):

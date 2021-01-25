@@ -266,26 +266,26 @@ class MainProgram:
 
             # [Layout] - Title
             self.editNameLabel=Label(self.tabEditProfile, text="Editar Perfil")
-            self.editNameLabel.place(x=230,y=40)
+            self.editNameLabel.place(x=245,y=40)
             self.editNameLabel.config(font = ('Helvetica 15 bold'))
 
             # [Layout] - Edit Name
             self.editNameLabel=Label(self.tabEditProfile, text="Nome")
-            self.editNameLabel.place(x=198,y=130)
+            self.editNameLabel.place(x=178,y=130)
             self.editNameEntry=Entry(self.tabEditProfile, width="30")
-            self.editNameEntry.place(x=260,y=130)
+            self.editNameEntry.place(x=240,y=130)
 
             # [Layout] - Edit Email
             self.editEmailLabel=Label(self.tabEditProfile, text="Email")
-            self.editEmailLabel.place(x=200,y=180)
+            self.editEmailLabel.place(x=180,y=180)
             self.editEmailEntry=Entry(self.tabEditProfile, width="30")
-            self.editEmailEntry.place(x=260,y=180)
+            self.editEmailEntry.place(x=240,y=180)
 
             # [Layout] - Edit Password
             self.editPasswordLabel=Label(self.tabEditProfile, text="Password")
-            self.editPasswordLabel.place(x=180,y=230)
+            self.editPasswordLabel.place(x=160,y=230)
             self.editPasswordEntry=Entry(self.tabEditProfile, width="30")
-            self.editPasswordEntry.place(x=260,y=230)
+            self.editPasswordEntry.place(x=240,y=230)
 
             # [Layout] - Update Button
             self.editProfileButton=ttk.Button(self.tabEditProfile, text="Atualizar")

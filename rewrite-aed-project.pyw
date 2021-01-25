@@ -384,19 +384,71 @@ class MainProgram:
             self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = "nw")
 
             def ShowNumber(x):
-                print(x)
-                self.recipeWindow=Tk()
-                self.recipeWindow.geometry("500x700")
+                def like():
+                    self.like=ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon.png").resize((30,30)))
+                    self.likeButton["image"]=self.like
+                    
+                def fav():
+                    self.fav=ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((30,30)))
+                    self.favButton["image"]=self.fav
+                    
+                ##Alterar lugar da imagem!!!!!!
+                self.recipeWindow=Toplevel(self.master)
+                self.recipeWindow.geometry("500x1000")
+                CenterWindow(self.recipeWindow)
+                self.recipeWindow.grab_set()
+                self.recipeWindow.resizable(False, False)
                 self.recipeWindow.title("Receita")
                 self.recipeName=Label(self.recipeWindow, text="Nome da receita", )
                 self.recipeName.place(x=10, y=150)
-                self.recipeName.config(font=('Helvetica 20 bold'))
-                self.recipeDescription=Label(self.recipeWindow, text="Descrição da receita")
-                self.recipeDescription.place(x=10,y=200)
-                self.recipeIngredients=Label(self.recipeWindow, text="Ingredientes: 100gr pão, 50gr de queijo...")
-                self.recipeIngredients.place(x=10,y=300)
-                self.recipePreparationMode=Label(self.recipeWindow, text="Preparação: Modo de preparação")
-                self.recipePreparationMode.place(x=10,y=350)
+                self.recipeName.config(font=('Helvetica 15 bold'))
+                self.recipeDescriptionLabel=Label(self.recipeWindow, text="Descrição da receita")
+                self.recipeDescriptionLabel.place(x=10,y=200)
+                self.recipeDescription=Text(self.recipeWindow, width="67", height="4")
+                self.recipeDescription.place(x=10,y=230)
+                self.recipeDescription.insert("end","asdasdasd")
+                self.recipeDescription.config(state=DISABLED, font="Helvetica 9")
+                self.recipeIngredientsLabel=Label(self.recipeWindow, text="Ingredientes:")
+                self.recipeIngredientsLabel.place(x=10,y=300)
+                self.recipeIngredients=Listbox(self.recipeWindow, height="7")
+                self.recipeIngredients.place(x=10,y=330)
+                self.recipePreparationModeLabel=Label(self.recipeWindow, text="Preparação:")
+                self.recipePreparationModeLabel.place(x=10,y=450)
+                self.recipePreparationMode=Text(self.recipeWindow, width="67", height="4")
+                self.recipePreparationMode.place(x=10,y=480)
+                self.recipePreparationMode.insert("end","asdasdasd")
+                self.recipePreparationMode.config(state=DISABLED, font="Helvetica 9")
+                self.like = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30,30)))
+                self.likeButton=Button(self.recipeWindow, image = self.like, compound = LEFT, relief="flat", width="30", height="30", command=like)
+                self.likeButton.place(x=10,y=550)
+                self.fav = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30,30)))
+                self.favButton=Button(self.recipeWindow, image = self.fav, compound = LEFT, relief="flat", width="30", height="30", command=fav)
+                self.favButton.place(x=50,y=550)
+                self.commentsLabel=Label(self.recipeWindow, text="Comentários:")
+                self.commentsLabel.place(x=10,y=610)
+
+                self.commentsFrame = Frame(self.recipeWindow, width = 500, height = 100)
+                self.commentsFrame.place(x = 10, y = 640)
+                self.commentsCanvas = Canvas(self.commentsFrame, width = 470)
+                self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+                self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
+                self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
+                self.commentsCanvas.configure(yscrollcommand = self.commentsCanvasScrollbar.set)
+                self.commentsCanvas.bind('<Configure>', lambda e: self.commentsCanvas.configure(scrollregion = self.commentsCanvas.bbox("all")))
+                self.commentsCanvas.bind("<MouseWheel>", partial(UseMouseWheel, self.commentsCanvas))
+                self.commentsSecondFrame = Frame(self.commentsCanvas)
+                self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = "nw")
+
+                self.commentArea=Text(self.recipeWindow, width="57", height="2" )
+                self.commentArea.place(x=10,y=950)
+                self.commentAreaLabel=Label(self.recipeWindow, text="Preparação:")
+                self.commentAreaLabel.place(x=10,y=920)
+                for i in range(5):
+                    self.allComments = Frame(self.commentsSecondFrame, width="470", height="60", highlightbackground="black", highlightthickness=1)
+                    self.allComments.pack(pady=3)
+                # self.teste=Text(self.recipeWindow, state=DISABLED)
+                # self.teste.place(x=50,y=550)
+
 
             for i in range(100):
                 self.allRecipeCard = Frame(self.recipesSecondFrame, width="590", height="80", highlightbackground="black", highlightthickness=1)
@@ -414,7 +466,7 @@ class MainProgram:
                 self.allRecipiCreator.place(x=200,y=55)
                 self.allRecipiSeeMore=Button(self.allRecipeCard, text="Ver mais", command=partial(ShowNumber, i))
                 self.allRecipiSeeMore.place(x=500,y=27)
-
+                
     def MainProgram_GlobalFunctions(self, func, *arg):
         def ClearFilters(a):
             if str(type(a)) == "<class 'tkinter.Entry'>": a.delete(0, END)

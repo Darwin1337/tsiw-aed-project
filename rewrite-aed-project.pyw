@@ -20,6 +20,15 @@ from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # print("Traceback:")
 # traceback.print_exc()
 
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
+
 def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data"): os.mkdir(os.getcwd() + "\\data")
     if not os.path.exists(os.getcwd() + "\\data\\user"): os.mkdir(os.getcwd() + "\\data\\user")
@@ -148,161 +157,223 @@ class MainProgram:
             if a == 1: self.MainProgram_UsersRecipesPage()
             if a == 2: self.MainProgram_AllRecipesPage()
 
-        def AddCategoryAdmin():
-
-            def AddNewCategoryAdmin():
-                with open(os.getcwd() + "\\data\\categories\\categories.txt", "a", encoding = "utf-8") as f:
-                    self.categoriesListbox.insert("end",self.catgoryIngredientsText.get())
-                    f.write(self.catgoryIngredientsText.get()+"\n")
-                    AddNewCategoryClose()
-                    
-            def AddNewCategoryClose():
-                self.addNewCategoryWindowAdmin.destroy()
-                self.master.update()
-                self.master.grab_set()
-            
-            # [Layout] - Add ingredient window
-            self.addNewCategoryWindowAdmin = Toplevel(self.master)
-            self.addNewCategoryWindowAdmin.geometry("250x100")
-            CenterWindow(self.addNewCategoryWindowAdmin)
-            self.addNewCategoryWindowAdmin.title("Adicionar Categoria")
-            self.addNewCategoryWindowAdmin.resizable(False, False)
-            self.addNewCategoryWindowAdmin.grab_set()
-            self.addNewCategoryWindowAdmin.protocol("WM_DELETE_WINDOW", AddNewCategoryClose)
-
-            # [Layout] - Add new ingredient textbox
-            self.categoryAddLabel = Label(self.addNewCategoryWindowAdmin, text = "Nome da categoria:")
-            self.categoryAddLabel.place(x = 60, y = 10)
-            self.catgoryIngredientsText = Entry(self.addNewCategoryWindowAdmin, width = 35)
-            self.catgoryIngredientsText.place(x = 18, y = 35)
-            self.catgoryIngredientsText.focus_force()
-
-            # [Layout] - Add new ingredient button
-            self.recipeIngredientsButton = ttk.Button(self.addNewCategoryWindowAdmin, text = "Adicionar", command = AddNewCategoryAdmin)
-            self.recipeIngredientsButton.place(x = 85, y = 65)
-
-        def RemoveCategoryAdmin():
-            try:
-                self.selectedIngredientAdmin = self.categoriesListbox.curselection()[0]
-                self.categoriesListbox.delete(self.selectedIngredientAdmin)
-            except:
-                messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.adminCatWindow)
-        
-        def EditCategoryAdmin():
-            def UpdateCatgory():
-                self.categoriesListbox.delete(self.selectedCategoryAdmin)
-                self.categoriesListbox.insert(self.selectedCategoryAdmin, self.categoryTextAdmin.get())
-                EditNewCategoryClose()
-            def EditNewCategoryClose():
-                self.editNewCategoryWindow.destroy()
-                self.master.update()
-                self.master.grab_set()
-
-            try:
-                self.selectedCategoryAdmin = self.categoriesListbox.curselection()[0]
-                # print(self.categoriesListbox.curselection())
-                # [Layout] - Edit ingredient window
-                self.editNewCategoryWindow = Toplevel(self.master)
-                self.editNewCategoryWindow.geometry("250x100")
-                CenterWindow(self.editNewCategoryWindow)
-                self.editNewCategoryWindow.title("Editar Ingrediente")
-                self.editNewCategoryWindow.resizable(False, False)
-                self.editNewCategoryWindow.grab_set()
-                self.editNewCategoryWindow.protocol("WM_DELETE_WINDOW", EditNewCategoryClose)
-                # [Layout] - Edit ingredient textbox
-                self.categoryEditLabel = Label(self.editNewCategoryWindow, text = "Nome do ingrediente:")
-                self.categoryEditLabel.place(x = 60, y = 10)
-                self.categoryTextAdmin = Entry(self.editNewCategoryWindow, width = 35)
-                self.categoryTextAdmin.insert("end",self.categoriesListbox.get(self.selectedCategoryAdmin).strip())
-                self.categoryTextAdmin.place(x = 18, y = 35)
-                self.categoryTextAdmin.focus_force()
-                # [Layout] - Edit ingredient button
-                self.editCategoryButtonAdmin = ttk.Button(self.editNewCategoryWindow, text = "Editar", command = UpdateCatgory)
-                self.editCategoryButtonAdmin.place(x = 85, y = 65)
-            except:
-                messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.adminCatWindow)
-
-        def UpdateListboxUsersAdmin():
-            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
-                for line in f.readlines():
-                    if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]:
-                        self.usersListbox.insert("end", DecryptString(line.split(";")[2],line.split(";")[0][:-10])+" | Utilizador")
-                    else: 
-                        self.usersListbox.insert("end", DecryptString(line.split(";")[2],line.split(";")[0][:-10])+" | Admin")
-
-        def UpdateListboxCatgoriesAdmin():
-            self.categoriesListbox.delete(0,"end")
-            with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding="utf-8") as f:
-                for line in f.readlines():
-                    self.categoriesListbox.insert("end", line)
-
-        def SaveModifies():
-            with open(os.getcwd() + "\\data\\categories\\categories.txt", "w", encoding="utf-8") as f:
-                
-                for i in range(self.categoriesListbox.size()):
-                    f.write(self.categoriesListbox.get(i).strip()+"\n")
-            messagebox.showinfo("Sucesso", "As alterações foram guardadas", parent = self.adminCatWindow)
-
         def CreateAdminCategoriesWindow():
+            def AdminCategoriesCustomClose():
+                self.adminCatWindow.destroy()
+                self.master.update()
+                self.master.grab_set()
+
+            def SaveModifications():
+                with open(os.getcwd() + "\\data\\categories\\categories.txt", "w", encoding="utf-8") as f:
+                    for i in range(self.categoriesListbox.size()):
+                        f.write(self.categoriesListbox.get(i).strip()+"\n")
+                messagebox.showinfo("Sucesso", "As alterações foram guardadas", parent = self.adminCatWindow)
+
+            def AddCategoryAdmin():
+                def AddNewCategoryAdmin():
+                    if self.catgoryIngredientsText.get().lower().strip().replace(" ", ""):
+                        self.addIsAlreadyPresent = False
+                        for i in range(self.categoriesListbox.size()):
+                            if self.catgoryIngredientsText.get().lower().strip() == self.categoriesListbox.get(i).lower().strip():
+                                self.addIsAlreadyPresent = True
+                        if not self.addIsAlreadyPresent:
+                            with open(os.getcwd() + "\\data\\categories\\categories.txt", "a", encoding = "utf-8") as f:
+                                self.categoriesListbox.insert("end", self.catgoryIngredientsText.get().strip())
+                                AddNewCategoryClose()
+                        else: messagebox.showerror("Erro", "A categoria introduzida já existe", parent = self.addNewCategoryWindowAdmin)
+                    else: messagebox.showerror("Erro", "A categoria introduzida é inválida", parent = self.addNewCategoryWindowAdmin)
+
+                def AddNewCategoryClose():
+                    self.addNewCategoryWindowAdmin.destroy()
+                    self.adminCatWindow.update()
+                    self.adminCatWindow.grab_set()
+
+                # [Layout] - Add ingredient window
+                self.addNewCategoryWindowAdmin = Toplevel(self.master)
+                self.addNewCategoryWindowAdmin.geometry("250x100")
+                CenterWindow(self.addNewCategoryWindowAdmin)
+                self.addNewCategoryWindowAdmin.title("Adicionar Categoria")
+                self.addNewCategoryWindowAdmin.resizable(False, False)
+                self.addNewCategoryWindowAdmin.grab_set()
+                self.addNewCategoryWindowAdmin.protocol("WM_DELETE_WINDOW", AddNewCategoryClose)
+
+                # [Layout] - Add new ingredient textbox
+                self.categoryAddLabel = Label(self.addNewCategoryWindowAdmin, text = "Nome da categoria:")
+                self.categoryAddLabel.place(x = 60, y = 10)
+                self.catgoryIngredientsText = Entry(self.addNewCategoryWindowAdmin, width = 35)
+                self.catgoryIngredientsText.place(x = 18, y = 35)
+                self.catgoryIngredientsText.focus_force()
+
+                # [Layout] - Add new ingredient button
+                self.recipeIngredientsButton = ttk.Button(self.addNewCategoryWindowAdmin, text = "Adicionar", command = AddNewCategoryAdmin)
+                self.recipeIngredientsButton.place(x = 85, y = 65)
+
+            def RemoveCategoryAdmin():
+                try:
+                    self.selectedIngredientAdmin = self.categoriesListbox.curselection()[0]
+                    if self.categoriesListbox.size() > 1: self.categoriesListbox.delete(self.selectedIngredientAdmin)
+                    else: messagebox.showerror("Erro", "Tem de haver pelo menos 1 categoria presente na lista!", parent = self.adminCatWindow)
+                except:
+                    messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.adminCatWindow)
+
+            def EditCategoryAdmin():
+                def EditNewCategoryClose():
+                    self.editNewCategoryWindow.destroy()
+                    self.adminCatWindow.update()
+                    self.adminCatWindow.grab_set()
+
+                def UpdateCategory():
+                    if self.categoryTextAdmin.get().lower().strip().replace(" ", ""):
+                        self.editIsAlreadyPresent = False
+                        for i in range(self.categoriesListbox.size()):
+                            if self.categoryTextAdmin.get().lower().strip() == self.categoriesListbox.get(i).lower().strip():
+                                self.editIsAlreadyPresent = True
+
+                        if self.categoryTextAdmin.get().lower().strip() == self.categoriesListbox.get(self.selectedCategoryAdmin).lower().strip():
+                            self.editIsAlreadyPresent = False
+
+                        if not self.editIsAlreadyPresent:
+                            self.categoriesListbox.delete(self.selectedCategoryAdmin)
+                            self.categoriesListbox.insert(self.selectedCategoryAdmin, self.categoryTextAdmin.get().strip())
+                            EditNewCategoryClose()
+                        else: messagebox.showerror("Erro", "A categoria introduzida já existe", parent = self.editNewCategoryWindow)
+                    else: messagebox.showerror("Erro", "A categoria introduzida é inválida", parent = self.editNewCategoryWindow)
+
+                try:
+                    self.selectedCategoryAdmin = self.categoriesListbox.curselection()[0]
+
+                    # [Layout] - Edit ingredient window
+                    self.editNewCategoryWindow = Toplevel(self.master)
+                    self.editNewCategoryWindow.geometry("250x100")
+                    CenterWindow(self.editNewCategoryWindow)
+                    self.editNewCategoryWindow.title("Editar Ingrediente")
+                    self.editNewCategoryWindow.resizable(False, False)
+                    self.editNewCategoryWindow.grab_set()
+                    self.editNewCategoryWindow.protocol("WM_DELETE_WINDOW", EditNewCategoryClose)
+
+                    # [Layout] - Edit ingredient textbox
+                    self.categoryEditLabel = Label(self.editNewCategoryWindow, text = "Nome do ingrediente:")
+                    self.categoryEditLabel.place(x = 60, y = 10)
+                    self.categoryTextAdmin = Entry(self.editNewCategoryWindow, width = 35)
+                    self.categoryTextAdmin.insert("end",self.categoriesListbox.get(self.selectedCategoryAdmin).strip())
+                    self.categoryTextAdmin.place(x = 18, y = 35)
+                    self.categoryTextAdmin.focus_force()
+
+                    # [Layout] - Edit ingredient button
+                    self.editCategoryButtonAdmin = ttk.Button(self.editNewCategoryWindow, text = "Editar", command = UpdateCategory)
+                    self.editCategoryButtonAdmin.place(x = 85, y = 65)
+                except: messagebox.showerror("Erro", "Selecione uma categoria para editar", parent = self.adminCatWindow)
+
+            def UpdateListboxCatgoriesAdmin():
+                self.categoriesListbox.delete(0,"end")
+                with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding="utf-8") as f:
+                    for line in f.readlines():
+                        self.categoriesListbox.insert("end", line.strip())
+
             # [Initial configuration]
             self.adminCatWindow=Toplevel(self.master)
             self.adminCatWindow.geometry("300x300")
             CenterWindow(self.adminCatWindow)
             self.adminCatWindow.title("Admin - Categorias")
             self.adminCatWindow.resizable(False, False)
+            self.adminCatWindow.grab_set()
+            self.adminCatWindow.protocol("WM_DELETE_WINDOW", AdminCategoriesCustomClose)
+
             # [Layout] - Title
-            self.adminCatTitle=Label(self.adminCatWindow, text="Area de Admin - Categorias", font=("Helvetica 15 bold"))
+            self.adminCatTitle=Label(self.adminCatWindow, text="Área de Admin - Categorias", font=("Helvetica 15 bold"))
             self.adminCatTitle.pack(side = TOP, anchor=CENTER, pady=20)
+
             # [Layout] - Label Frame
             self.categoriesLabelFrame=LabelFrame(self.adminCatWindow, height="200", width="270", text="Categorias")
             self.categoriesLabelFrame.place(x=10,y=70)
+
             # [Layout] - Show categories
             self.categoriesListbox=Listbox(self.categoriesLabelFrame)
             self.categoriesListbox.place(x=10,y=10)
-            #Show Categories in Listbox
             UpdateListboxCatgoriesAdmin()
+
             # [Layout] - Add categories
             self.categoriesAddButton=ttk.Button(self.categoriesLabelFrame, text="Adicionar", command=AddCategoryAdmin)
             self.categoriesAddButton.place(x=150,y=20)
+
             # [Layout] - Remove categories
             self.categoriesRemoveButton=ttk.Button(self.categoriesLabelFrame, text="Remover", command=RemoveCategoryAdmin)
             self.categoriesRemoveButton.place(x=150,y=60)
+
             # [Layout] - Edit categories
             self.categoriesEditButton=ttk.Button(self.categoriesLabelFrame, text="Editar", command=EditCategoryAdmin)
             self.categoriesEditButton.place(x=150,y=100)
+
             # [Layout] - Save all
-            self.categoriesSaveButton=ttk.Button(self.categoriesLabelFrame, text="Guardar alterações", command=SaveModifies)
+            self.categoriesSaveButton=ttk.Button(self.categoriesLabelFrame, text="Guardar alterações", command=SaveModifications)
             self.categoriesSaveButton.place(x=150,y=140)
 
         def CreateAdminUsersWindow():
+            def AdminUserWindowCustomClose():
+                self.adminUsersWindow.destroy()
+                self.master.update()
+                self.master.grab_set()
+
             def ChangeUserType():
                 try:
                     self.selectedUserAdmin = self.usersListbox.curselection()[0]
-                except:
-                    messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.adminCatWindow)
+                    with open(os.getcwd() + "\\data\\user\\users_info.txt", "w", encoding="utf-8") as f: pass
+                    for i in range(len(self.saveUsersState["lines"])):
+                        if i == int(self.usersListbox.get(self.selectedUserAdmin).split("|")[0]):
+                            if self.saveUsersState["lines"][i]["type"] == "Administrador": builtString = self.saveUsersState["lines"][i]["email"] + EncryptSHA256("user")[:10] + ";" + self.saveUsersState["lines"][i]["content"].split(";")[1] + ";" + self.saveUsersState["lines"][i]["content"].split(";")[2]
+                            else: builtString = self.saveUsersState["lines"][i]["email"] + EncryptSHA256("admin")[:10] + ";" + self.saveUsersState["lines"][i]["content"].split(";")[1] + ";" + self.saveUsersState["lines"][i]["content"].split(";")[2]
+                            with open(os.getcwd() + "\\data\\user\\users_info.txt", "a", encoding="utf-8") as f: f.write(builtString)
+                        else:
+                            with open(os.getcwd() + "\\data\\user\\users_info.txt", "a", encoding="utf-8") as f: f.write(self.saveUsersState["lines"][i]["content"])
+                    UpdateListboxUsersAdmin()
+                except: messagebox.showerror("Erro", "Selecione um utilizador para alterar", parent = self.adminUsersWindow)
+
+            def UpdateListboxUsersAdmin():
+                self.saveUsersState = { "lines": [] }
+                self.countHelper = 0
+                self.usersListbox.delete(0, END)
+                with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
+                    for line in f.readlines():
+                        user = {}
+                        user["content"] = line
+                        user["email"] = line.split(";")[0][:-10]
+                        user["index"] = self.countHelper
+                        user["type"] = "Administrador"
+                        if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]:
+                            user["type"] = "Utilizador"
+                        self.countHelper += 1
+                        self.saveUsersState["lines"].append(user)
+
+                for i in range(len(self.saveUsersState["lines"])):
+                    if self.saveUsersState["lines"][i]["email"] != EncryptSHA256(self.loggedInUserInformation[1]):
+                        self.usersListbox.insert("end", str(self.saveUsersState["lines"][i]["index"]) + " | " + DecryptString(self.saveUsersState["lines"][i]["content"].split(";")[2], self.saveUsersState["lines"][i]["content"].split(";")[0][:-10]) + " | " + str(self.saveUsersState["lines"][i]["type"]))
+
             # [Initial configuration]
             self.adminUsersWindow=Toplevel(self.master)
             self.adminUsersWindow.geometry("400x300")
             CenterWindow(self.adminUsersWindow)
             self.adminUsersWindow.title("Admin - Utilizadores")
             self.adminUsersWindow.resizable(False, False)
+            self.adminUsersWindow.grab_set()
+            self.adminUsersWindow.protocol("WM_DELETE_WINDOW", AdminUserWindowCustomClose)
+
             # [Layout] - Title
-            self.adminUsersTitle=Label(self.adminUsersWindow, text="Area de Admin - Utilizadores", font=("Helvetica 15 bold"))
+            self.adminUsersTitle=Label(self.adminUsersWindow, text="Área de Admin - Utilizadores", font=("Helvetica 15 bold"))
             self.adminUsersTitle.pack(side = TOP, anchor=CENTER, pady=20)
+
             # [Layout] - Label Frame
             self.usersLabelFrame=LabelFrame(self.adminUsersWindow, height="200", width="370", text="Utilizadores")
             self.usersLabelFrame.place(x=10,y=70)
+
             # [Layout] - Show users
-            self.usersListbox=Listbox(self.usersLabelFrame, width="37")
+            self.usersListbox=Listbox(self.usersLabelFrame, width="57", height="7")
             self.usersListbox.place(x=10,y=10)
-            #Show Categories in Listbox
+
             UpdateListboxUsersAdmin()
+
             # [Layout] - Change type
             self.usersChageTypeButton=ttk.Button(self.usersLabelFrame, text="Alterar tipo", command=ChangeUserType)
-            self.usersChageTypeButton.place(x=250,y=20)
-            # [Layout] - Save all
-            self.usersSaveButton=ttk.Button(self.usersLabelFrame, text="Guardar alterações", command="noaction")
-            self.usersSaveButton.place(x=250,y=140)
+            self.usersChageTypeButton.place(x=145, y=140)
 
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
@@ -443,13 +514,11 @@ class MainProgram:
             self.hasUserGoneToPage0 = True
 
             def UpdatePerfil():
-
+                pass
                 #Colocar a encryptar e guardar no ficheiro
                 #Colocar a encryptar e guardar no ficheiro
                 #Colocar a encryptar e guardar no ficheiro
                 #Colocar a encryptar e guardar no ficheiro
-
-                print("hey")
 
             # [Layout] - Title
             self.titlePerfilLabel=Label(self.tabEditProfile, text="Editar Perfil")
@@ -477,7 +546,7 @@ class MainProgram:
             #Verificar se password é igual
             #Verificar se password é igual
 
-            # [Layout] - Password Antiga
+            # [Layout] - Old password
             self.oldPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Antiga")
             self.oldPasswordLabel.place(x=20,y=120)
             self.oldPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
@@ -522,8 +591,6 @@ class MainProgram:
             self.usersRecipesSearchByIngredientText.place(x = 8, y = 80)
             self.usersRecipesSearchByIngredientClearButton = ttk.Button(self.usersRecipesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersRecipesSearchByIngredientText))
             self.usersRecipesSearchByIngredientClearButton.place(x = 165, y = 77)
-            
-
 
             # [Layout] - Search by category filter
             self.usersRecipesSearchByCategoryLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por categoria:")
@@ -634,17 +701,16 @@ class MainProgram:
             self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
             self.createRecipeButton.place(x = 140, y = 10)
 
-            # [Layout] - Recipes frame
-            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
-            self.recipesFrame.place(x = 5, y = 45)
-            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
-            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
-            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
-            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
-            self.recipesSecondFrame = Frame(self.recipesCanvas)
-            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
+
+
+            # self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+            # self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            # self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+            # self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            # self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+            # self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
+            # self.recipesSecondFrame = Frame(self.recipesCanvas)
+            # self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
 
             self.MainProgram_UpdateAllReceiptsPage()
 
@@ -674,22 +740,22 @@ class MainProgram:
         self.newRecipeWindow = Toplevel(self.master)
         self.app = Recipe(self.newRecipeWindow)
 
-    def MainProgram_ShowRecipeDetails(self, id = 0):
+    def MainProgram_ShowRecipeDetails(self, id = 0, path = ""):
         def LikeRecipe():
             if self.likeButton.currentImg == "heartIcon2.png":
-                self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon.png").resize((30, 30)))
+                self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon.png").resize((20, 20)))
                 self.likeButton.currentImg = "heartIcon.png"
             else:
-                self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30, 30)))
+                self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((20, 20)))
                 self.likeButton.currentImg = "heartIcon2.png"
             self.likeButton["image"] = self.likeImage
 
         def FavoriteRecipe():
             if self.favButton.currentImg == "favIcon2.png":
-                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((30, 30)))
+                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((20, 20)))
                 self.favButton.currentImg = "favIcon.png"
             else:
-                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30, 30)))
+                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((20, 20)))
                 self.favButton.currentImg = "favIcon2.png"
             self.favButton["image"] = self.favImage
 
@@ -697,113 +763,216 @@ class MainProgram:
             self.recipeDetailsWindow.destroy()
             self.master.update()
 
-        # [Initial configuration]
-        self.recipeDetailsWindow = Toplevel(self.master)
-        self.recipeDetailsWindow.geometry("850x600")
-        CenterWindow(self.recipeDetailsWindow)
-        self.recipeDetailsWindow.title("Receita")
-        self.recipeDetailsWindow.resizable(False, False)
-        self.recipeDetailsWindow.grab_set()
-        self.recipeDetailsWindow.focus_force()
-        self.recipeDetailsWindow.protocol("WM_DELETE_WINDOW", RecipeDetailsCustomClose)
+        if id == 0 or path == "":
+            messagebox.showerror("Erro", "Ocorreu um erro ao tentar carregar as informações desta receita", parent = self.master)
+        else:
+            # [Initial configuration]
+            self.recipeDetailsWindow = Toplevel(self.master)
+            self.recipeDetailsWindow.geometry("840x580")
+            CenterWindow(self.recipeDetailsWindow)
+            self.recipeDetailsWindow.title("Receita")
+            self.recipeDetailsWindow.resizable(False, False)
+            self.recipeDetailsWindow.grab_set()
+            self.recipeDetailsWindow.focus_force()
+            self.recipeDetailsWindow.protocol("WM_DELETE_WINDOW", RecipeDetailsCustomClose)
 
-        if id >= 1: messagebox.showinfo("Sucesso", "Funcionou!", parent = self.recipeDetailsWindow)
+            # [Layout] - Recipe information fieldset
+            self.recipeInformation = LabelFrame(self.recipeDetailsWindow, width = "420", height = "345", text = "Informação da receita")
+            self.recipeInformation.place(x = 10, y = 10)
 
-        self.recipeDetailsPictureCanvas = Canvas(self.recipeDetailsWindow, width = "110", height = "110")
-        self.recipeDetailsPictureCanvas.place(x = 320, y = 5)
-        self.recipeDetailsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-        self.recipeDetailsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipeDetailsPictureCanvas.imgpath).resize((110, 110)))
-        self.recipeDetailsPictureCanvas.create_image(55,55, image = self.recipeDetailsPictureCanvas.image, anchor = CENTER)
+            try:
+                # [Layout] - Recipe title
+                self.recipeDetailsNameVar = ""
+                with open(path + "\\name.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeDetailsNameVar = DecryptString(line, "auth")
+                self.recipeDetailsName = Label(self.recipeInformation, text = self.recipeDetailsNameVar, wraplength = 280, justify = LEFT)
+                self.recipeDetailsName.place(x = 5, y = 5)
+                self.recipeDetailsName.config(font = ('Helvetica 12 bold'))
 
-        # [Layout] - Recipe title
-        self.recipeDetailsName = Label(self.recipeDetailsWindow, text = "Nome da receita", wraplength = 280, justify = LEFT)
-        self.recipeDetailsName.place(x = 10, y = 5)
-        self.recipeDetailsName.config(font = ('Helvetica 15 bold'))
+                # [Layout] - Recipe picture
+                self.recipeDetailsPictureCanvas = Canvas(self.recipeInformation, width = "110", height = "110")
+                self.recipeDetailsPictureCanvas.place(x = 295, y = 5)
+                CreatePath()
+                if os.path.exists(path + "\\picture.jpg"):
+                    self.recipeDetailsPictureCanvas.imgpath = path + "\\picture.jpg"
+                elif os.path.exists(path + "\\picture.png"):
+                    self.recipeDetailsPictureCanvas.imgpath = path + "\\picture.png"
+                elif os.path.exists(path + "\\picture.jpeg"):
+                    self.recipeDetailsPictureCanvas.imgpath = path + "\\picture.jpeg"
+                else:
+                    self.recipeDetailsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                self.recipeDetailsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipeDetailsPictureCanvas.imgpath).resize((110, 110)))
+                self.recipeDetailsPictureCanvas.create_image(55, 55, image = self.recipeDetailsPictureCanvas.image, anchor = CENTER)
 
-        # [Layout] - Recipe description
-        self.recipeDetailsDescriptionLabel = Label(self.recipeDetailsWindow, text = "Descrição da receita")
-        self.recipeDetailsDescriptionLabel.place(x = 10, y = 70)
-        self.recipeDetailsDescriptionText = Text(self.recipeDetailsWindow, width = "45", height = "7")
-        self.recipeDetailsDescriptionText.place(x = 10, y = 100)
-        self.recipeDetailsDescriptionText.insert(END, "asdasdasd")
-        self.recipeDetailsDescriptionText.config(state = DISABLED, font = ('TkDefaultFont'))
+                # [Layout] - Recipe description
+                self.recipeDetailsDescriptionLabel = Label(self.recipeInformation, text = "Descrição da receita")
+                self.recipeDetailsDescriptionLabel.place(x = 5, y = 55)
+                self.recipeDetailsDescriptionText = Text(self.recipeInformation, font = ('TkDefaultFont'), wrap = WORD, width = "45", height = "4")
+                self.recipeDetailsDescriptionText.place(x = 8, y = 80)
+                self.recipeDetailsDescriptionTextVar = ""
+                with open(path + "\\description.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeDetailsDescriptionTextVar += line
+                self.recipeDetailsDescriptionText.insert(END, DecryptString(self.recipeDetailsDescriptionTextVar, "auth"))
+                self.recipeDetailsDescriptionText.config(state = DISABLED)
 
-        # [Layout] - Recipe ingredients
-        self.recipeDetailsIngredientsLabel = Label(self.recipeDetailsWindow, text = "Ingredientes")
-        self.recipeDetailsIngredientsLabel.place(x = 300, y = 240)
-        self.recipeDetailsIngredientsList = Listbox(self.recipeDetailsWindow, height = "7")
-        self.recipeDetailsIngredientsList.place(x = 300, y = 270)
+                # [Layout] - Recipe procedure
+                self.recipeDetailsPreparationModeLabel = Label(self.recipeInformation, text = "Preparação")
+                self.recipeDetailsPreparationModeLabel.place(x = 5, y = 150)
+                self.recipeDetailsPreparationModeText = Text(self.recipeInformation, font = ('TkDefaultFont'), wrap = WORD, width = "45", height = "7")
+                self.recipeDetailsPreparationModeText.place(x = 8, y = 175)
+                self.recipeDetailsPreparationModeTextVar = ""
+                with open(path + "\\procedure.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeDetailsPreparationModeTextVar += line
+                self.recipeDetailsPreparationModeText.insert(END, DecryptString(self.recipeDetailsPreparationModeTextVar, "auth"))
+                self.recipeDetailsPreparationModeText.config(state = DISABLED)
 
-        # [Layout] - Recipe procedure
-        self.recipeDetailsPreparationModeLabel = Label(self.recipeDetailsWindow, text = "Preparação")
-        self.recipeDetailsPreparationModeLabel.place(x = 10, y = 240)
-        self.recipeDetailsPreparationModeText = Text(self.recipeDetailsWindow, width = "45", height = "7")
-        self.recipeDetailsPreparationModeText.place(x = 10, y = 270)
-        self.recipeDetailsPreparationModeText.insert(END, "asdasdasd")
-        self.recipeDetailsPreparationModeText.config(state = DISABLED, font = ('TkDefaultFont'))
+                # [Layout] - Recipe ingredients
+                self.recipeDetailsIngredientsLabel = Label(self.recipeInformation, text = "Ingredientes")
+                self.recipeDetailsIngredientsLabel.place(x = 290, y = 150)
+                self.recipeDetailsIngredientsList = Listbox(self.recipeInformation, font = ('TkDefaultFont'), width="19", height = "7")
+                with open(path + "\\ingredients.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeDetailsIngredientsList.insert(END, DecryptString(line, "auth"))
+                self.recipeDetailsIngredientsList.place(x = 290, y = 175)
 
-        # [Layout] - Verifies if the like/fav icons exist and/or have been tampered with
-        # Verificar também a imagem escolhida para a receita
-        # Verificar também a imagem escolhida para a receita
-        # Verificar também a imagem escolhida para a receita
+                # [Layout] - Recipe cooking time
+                self.recipeCookingTimeVar = "Tempo de confeção: "
+                with open(path + "\\time.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeCookingTimeVar += line.split(";")[0] + "h " + line.split(";")[1] + "min"
+                self.recipeCookingTime = Label(self.recipeInformation, text = self.recipeCookingTimeVar)
+                self.recipeCookingTime.place(x = 5, y = 295)
 
-        CreatePath()
-        if MD5Checksum(3) != ["4838e2badab07ade21e9e8a714e46b96", "c4dfc88dac9042d626c501c1f07b6545", "e089f20ce2957c46617ec4691214d730", "1fa2f622aa13752e4ed74d8017fa5364"]:
-            messagebox.showerror("Erro", "Os ícones de like/fav não foram reconhecidos\nO programa irá fechar", parent = self.recipeDetailsWindow)
-            os._exit(0)
+                # [Layout] - Recipe statistics fieldset
+                self.recipeStatistics = LabelFrame(self.recipeDetailsWindow, width = "420", height = "100", text = "Estatísticas")
+                self.recipeStatistics.place(x = 10, y = 360)
 
-        # [Layout] - Recipe interaction - likes
-        self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30, 30)))
-        self.likeButton = Button(self.recipeDetailsWindow, image = self.likeImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = LikeRecipe)
-        self.likeButton.currentImg = "heartIcon2.png"
-        self.likeButton.place(x = 10, y = 400)
+                # [Layout] - Recipe statistics - average rating
+                self.averageRatingLabelVar = 0.0
+                self.ratingsSum, self.quantRatings = 0, 0
+                with open(path + "\\rating.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            print(line.split(";")[1])
+                            self.ratingsSum += int(line.split(";")[1])
+                            self.quantRatings += 1
+                    if self.quantRatings > 0: self.averageRatingLabelVar = float(self.ratingsSum / self.quantRatings)
+                self.averageRatingLabel = Label(self.recipeStatistics, text = "Rating: " + str(self.averageRatingLabelVar))
+                self.averageRatingLabel.place(x = 10, y = 5)
 
-        # [Layout] - Recipe interaction - favorites
-        self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30, 30)))
-        self.favButton = Button(self.recipeDetailsWindow, image = self.favImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
-        self.favButton.currentImg = "favIcon2.png"
-        self.favButton.place(x = 50, y = 400)
+                # [Layout] - Recipe statistics - likes
+                self.likesLabelVar = 0
+                with open(path + "\\likes\\nlikes.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.likesLabelVar = line
+                self.likesLabel = Label(self.recipeStatistics, text = "Likes: " + str(self.likesLabelVar))
+                self.likesLabel.place(x = 10, y = 30)
 
-        # [Layout] - Recipe interaction - views
-        self.viewsLabel=Label(self.recipeDetailsWindow, text="Visualizações:")
-        self.viewsLabel.place(x = 90, y = 405)
+                # [Layout] - Recipe statistics - views
+                self.viewsLabelVar = 0
+                with open(path + "\\views\\nviews.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.viewsLabelVar = line
+                self.viewsLabel = Label(self.recipeStatistics, text = "Visualizações: " + str(self.viewsLabelVar))
+                self.viewsLabel.place(x = 10, y = 55)
 
-        # [Layout] - Recipe interaction - rating
-        self.ratingLabel=Label(self.recipeDetailsWindow, text="Rating:")
-        self.ratingLabel.place(x = 10 , y = 455)
-        self.ratingSpinBox=Spinbox(self.recipeDetailsWindow, from_=1, to=5, width=2)
-        self.ratingSpinBox.place(x=62 , y=455)
-        self.ratingButton=ttk.Button(self.recipeDetailsWindow, text="Votar")
-        self.ratingButton.place(x=100 , y=450)
+                # [Layout] - User interactions fieldset
+                self.userInteractions = LabelFrame(self.recipeDetailsWindow, width = "420", height = "100", text = "Ações")
+                self.userInteractions.place(x = 10, y = 470)
 
-        # [Layout] - Recipe interaction - users comments fieldset
-        self.commentsLabelFrame=LabelFrame(self.recipeDetailsWindow, width="390", height="400", text="Comentários")
-        self.commentsLabelFrame.place(x=440, y=10)
+                # [Layout] - Verifies if the like/fav icons exist and/or have been tampered with
+                CreatePath()
+                if MD5Checksum(3) != ["4838e2badab07ade21e9e8a714e46b96", "c4dfc88dac9042d626c501c1f07b6545", "e089f20ce2957c46617ec4691214d730", "1fa2f622aa13752e4ed74d8017fa5364"]:
+                    messagebox.showerror("Erro", "Os ícones de like/fav não foram reconhecidos\nO programa irá fechar", parent = self.recipeDetailsWindow)
+                    os._exit(0)
 
-        # [Layout] - Recipe interaction - users comments
-        self.commentsFrame = Frame(self.commentsLabelFrame, width = 390, height = 100)
-        self.commentsFrame.place(x = 10, y = 10)
-        self.commentsCanvas = Canvas(self.commentsFrame, width = 355, height=350)
-        self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-        self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
-        self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
-        self.commentsCanvas.configure(yscrollcommand = self.commentsCanvasScrollbar.set)
-        self.commentsCanvas.bind('<Configure>', lambda e: self.commentsCanvas.configure(scrollregion = self.commentsCanvas.bbox("all")))
-        self.commentsSecondFrame = Frame(self.commentsCanvas)
-        self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = NW)
+                # [Layout] - User interactions - likes
+                self.userLikes = Label(self.userInteractions, text = "Like:")
+                self.userLikes.place(x = 110, y = 10)
+                self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((20, 20), Image.ANTIALIAS))
+                self.likeButton = Button(self.userInteractions, image = self.likeImage, compound = CENTER, relief = "flat", width = "20", height = "20", highlightthickness = 0, bd = 0, command = LikeRecipe)
+                self.likeButton.currentImg = "heartIcon2.png"
+                self.likeButton.place(x = 150, y = 10)
 
-        for i in range(10):
-            self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "60", highlightbackground = "black", highlightthickness = 1)
-            self.allComments.pack(pady = 3)
+                # [Layout] - Recipe interaction - favorites
+                self.userFav = Label(self.userInteractions, text = "Adicionar aos favoritos:")
+                self.userFav.place(x = 10, y = 40)
+                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((20, 20), Image.ANTIALIAS))
+                self.favButton = Button(self.userInteractions, image = self.favImage, compound = CENTER, relief = "flat", width = "20", height = "20", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
+                self.favButton.currentImg = "favIcon2.png"
+                self.favButton.place(x = 150, y = 40)
 
-        # [Layout] - Recipe interaction - comment textbox
-        self.commentArea = Text(self.recipeDetailsWindow, width = "40", height = "2", font = ('TkDefaultFont'))
-        self.commentArea.place(x = 440, y = 430)
-        self.addCommentIcon = ttk.Button(self.recipeDetailsWindow, text="Add")
-        self.addCommentIcon.place(x = 770, y = 435)
+                # [Layout] - Recipe interaction - ratings
+                self.ratingLabel = Label(self.userInteractions, text = "Avaliar:")
+                self.ratingLabel.place(x = 200 , y = 10)
+                self.ratingSpinBox = Spinbox(self.userInteractions, from_ = 1, to = 5, width = 2)
+                self.ratingSpinBox.place(x = 250 , y = 11)
+                self.ratingButton = ttk.Button(self.userInteractions, text = "Avaliar")
+                self.ratingButton.place(x = 285 , y = 8)
+                self.usersRatingLabel = Label(self.userInteractions, text = "A sua avaliação: Nenhuma")
+                self.usersRatingLabel.place(x = 200, y = 40)
+
+                # [Layout] - Recipe interaction - users comments fieldset
+                self.commentsLabelFrame = LabelFrame(self.recipeDetailsWindow, width = "390", height = "560", text = "Comentários")
+                self.commentsLabelFrame.place(x = 440, y = 10)
+
+                # [Layout] - Recipe interaction - users comments
+                self.commentsFrame = Frame(self.commentsLabelFrame, width = 390, height = 380)
+                self.commentsFrame.place(x = 5, y = 10)
+                self.commentsCanvas = Canvas(self.commentsFrame, width = 355, height = 380)
+                self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+                self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
+                self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
+                self.commentsCanvas.configure(yscrollcommand = self.commentsCanvasScrollbar.set)
+                self.commentsCanvas.bind('<Configure>', lambda e: self.commentsCanvas.configure(scrollregion = self.commentsCanvas.bbox("all")))
+                self.commentsSecondFrame = Frame(self.commentsCanvas)
+                self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = NW)
+
+                for i in range(5):
+                    self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "75", highlightbackground = "black", highlightthickness = 1)
+                    self.allComments.pack(pady = 3)
+
+                # [Layout] - Recipe interaction - comment textbox
+                self.commentArea = Text(self.commentsLabelFrame, width = "62", height = "5", wrap = WORD, font = ('TkDefaultFont'))
+                self.commentArea.place(x = 5, y = 415)
+                self.addCommentIcon = ttk.Button(self.commentsLabelFrame, text = "Comentar")
+                self.addCommentIcon.place(x = 150, y = 505)
+            except Exception as err:
+                print("Error:\n" + str(err) + "\n")
+                print("Traceback:")
+                traceback.print_exc()
+                # messagebox.showerror("Erro", "Ocorreu um erro inesperado\nO programa vai fechar", parent = self.master)
+                # os._exit(0)
 
     def MainProgram_UpdateAllReceiptsPage(self):
-        self.ClearWindowWidgets(self.recipesSecondFrame)
+        # [Layout] - Recipes frame
+        try:
+            self.recipesFrame.destroy()
+            self.recipesCanvas.destroy()
+            self.recipesCanvasScrollbar.destroy()
+            self.recipesSecondFrame.destroy()
+        except: pass
+
+        self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
+        self.recipesFrame.place(x = 5, y = 45)
+        self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+        self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+        self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+        self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+        self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+        self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
+        self.recipesSecondFrame = Frame(self.recipesCanvas)
+        self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
 
         # [Layout] - Verifies if the default recipe image exists and/or has been tampered with
         CreatePath()
@@ -841,8 +1010,17 @@ class MainProgram:
                                 for line in f.readlines():
                                     if line.strip().replace(" ", ""):
                                         self.recipeTitle = DecryptString(line, "auth")
-                            self.allRecipesName = Label(self.allRecipesCard, text = self.recipeTitle)
+                            self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipeTitle)
                             self.allRecipesName.place(x = 90, y = 5)
+
+                            self.recipeTimeToCook = "0:00h"
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.recipeTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
+
+                            self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
+                            self.allRecipesTime.place(x = 90, y = 30)
 
                             self.recipeLikes = 0
                             if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
@@ -876,9 +1054,8 @@ class MainProgram:
                                     if line.strip().replace(" ", ""):
                                         self.recipeId = int(line)
 
-                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId))
+                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
                             self.allRecipesSeeMore.place(x = 500, y = 27)
-
         else: self.shouldTheNoRecipesCardBeDisplayed = True
 
         if self.shouldTheNoRecipesCardBeDisplayed or not self.recipeFound:
@@ -886,12 +1063,6 @@ class MainProgram:
             self.noRecipesFoundCard.pack(pady = 3)
             self.noRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
             self.noRecipesLabel.place(x = 200, y = 35)
-
-        self.master.update()
-        self.recipesFrame.update()
-        self.recipesCanvas.update()
-        self.recipesCanvasScrollbar.update()
-        self.recipesSecondFrame.update()
 
 class Login:
     def __init__(self, master):
@@ -1218,7 +1389,7 @@ class Recipe:
 
         # [Initial configuration]
         self.master = master
-        self.master.geometry("500x770")
+        self.master.geometry("500x780")
         CenterWindow(self.master)
         self.master.title("Nova receita")
         self.master.resizable(False, False)
@@ -1239,7 +1410,7 @@ class Recipe:
         # [Layout] - Recipe description
         self.recipeDescriptionLabel = Label(self.generalInformationLabelFrame, text = "Descrição da receita:")
         self.recipeDescriptionLabel.place(x = 130, y = 70, anchor = E)
-        self.recipeDescriptionText = Text(self.generalInformationLabelFrame, height = "4", width = "45", font = ('TkDefaultFont'))
+        self.recipeDescriptionText = Text(self.generalInformationLabelFrame, height = "4", width = "45", wrap = WORD, font = ('TkDefaultFont'))
         self.recipeDescriptionText.place(x = 150, y = 97.5, anchor = W)
 
         # [Layout] - Recipe picture
@@ -1267,7 +1438,7 @@ class Recipe:
 
         # [Layout] - Recipe ingredients fieldset
         self.ingredientsLabelFrame = LabelFrame(self.master, text = "Ingredientes", width = "490", height = "130", bd = "2")
-        self.ingredientsLabelFrame.place(x = 5, y = 300)
+        self.ingredientsLabelFrame.place(x = 5, y = 290)
 
         # [Layout] - Recipe ingredients
         self.recipeIngredientsLabel = Label(self.ingredientsLabelFrame, text = "Lista de ingredientes:")
@@ -1286,18 +1457,34 @@ class Recipe:
         self.removeRecipeIngredients.place(x = 15, y = 72)
 
         # [Layout] - Recipe procedure fieldset
-        self.recipeProcedureLabelFrame = LabelFrame(self.master, text = "Confeção", width = "490", height = "110", bd = "2")
-        self.recipeProcedureLabelFrame.place(x = 5, y = 450)
+        self.recipeProcedureLabelFrame = LabelFrame(self.master, text = "Confeção", width = "490", height = "160", bd = "2")
+        self.recipeProcedureLabelFrame.place(x = 5, y = 425)
 
         # [Layout] - Recipe procedure textbox
         self.recipeProcedureLabel = Label(self.recipeProcedureLabelFrame, text = "Procedimentos:")
         self.recipeProcedureLabel.place(x = 130, y = 20, anchor = E)
-        self.recipeProcedureText = Text(self.recipeProcedureLabelFrame, height = "4", width = "45", font = ('TkDefaultFont'))
+        self.recipeProcedureText = Text(self.recipeProcedureLabelFrame, height = "4", width = "45", wrap = WORD, font = ('TkDefaultFont'))
         self.recipeProcedureText.place(x = 150, y = 47.5, anchor = W)
+
+        # [Layout] - Recipe time textbox
+        self.recipeTimeLabel = Label(self.recipeProcedureLabelFrame, text = "Tempo de confeção:")
+        self.recipeTimeLabel.place(x = 130, y = 110, anchor = E)
+
+        # [Layout] - Recipe time textbox - hours
+        self.recipeHoursLabel = Label(self.recipeProcedureLabelFrame, text = "Horas:")
+        self.recipeHoursLabel.place(x = 190, y = 110, anchor = E)
+        self.recipeHoursSpinbox = Spinbox(self.recipeProcedureLabelFrame, from_ = 0, to = 24, width = 3)
+        self.recipeHoursSpinbox.place(x = 200 , y = 102.5)
+
+        # [Layout] - Recipe time textbox - hours
+        self.recipeMinutesLabel = Label(self.recipeProcedureLabelFrame, text = "Minutos:")
+        self.recipeMinutesLabel.place(x = 310, y = 110, anchor = E)
+        self.recipeMinutesSpinbox = Spinbox(self.recipeProcedureLabelFrame, from_ = 0, to = 59, width = 3)
+        self.recipeMinutesSpinbox.place(x = 320 , y = 102.5)
 
         # [Layout] - Recipe category fieldset
         self.recipeCategoryLabelFrame = LabelFrame(self.master, text = "Categorias", width = "490", height = "130", bd = "2")
-        self.recipeCategoryLabelFrame.place(x = 5, y = 575)
+        self.recipeCategoryLabelFrame.place(x = 5, y = 590)
 
         # [Layout] - Recipe category textbox
         self.recipeCategoryLabel = Label(self.recipeCategoryLabelFrame, text = "Categorias:")
@@ -1317,7 +1504,7 @@ class Recipe:
 
         # [Layout] - Add recipe button
         self.addRecipe = Button(self.master, text = "Adicionar", relief = "groove", width = "20", height = "2", command = self.SaveNewRecipe)
-        self.addRecipe.place(x = 175, y = 720)
+        self.addRecipe.place(x = 175, y = 730)
 
     def SelectRecipeImage(self):
         self.pathImageRecipe = filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
@@ -1398,64 +1585,76 @@ class Recipe:
                                     if self.listboxRecipeIngredients.size() > 0:
                                         if str(self.recipeProcedureText.get("1.0", END)).strip().replace(" ", ""):
                                             if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) > 20:
-                                                if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) <= 450:
-                                                    if self.listboxRecipeCategories.size() > 0:
-                                                        self.doesUserWantToContinueRecipePicture = True
-                                                        if self.recipePictureCanvas.imgpath.split("\\")[-1] == "default_recipes.jpg":
-                                                            self.continueDefaultRecipe = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de receita, se continuar irá ser selecionada a foto de receita padrão, prosseguir?", icon = "warning", parent = self.master)
-                                                            if self.continueDefaultRecipe == "no":
-                                                                self.doesUserWantToContinueRecipePicture = False
-                                                            else:
-                                                                if MD5Checksum(2) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-                                                                    messagebox.showerror("Erro", "A foto de receita padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
-                                                                    os._exit(0)
-                                                        if self.doesUserWantToContinueRecipePicture:
-                                                            CreatePath()
-                                                            self.wasAnyIdFound = False
-                                                            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-                                                                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
-                                                                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                                                                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                                                                            self.savedRecipeID = int(os.listdir(os.getcwd() + "\\data\\recipes")[i].split("-")[-1]) + 1
-                                                                            self.wasAnyIdFound = True
-                                                                    else:
-                                                                        if i == (len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1) and not self.wasAnyIdFound:
-                                                                            self.savedRecipeID = 1
-                                                            else: self.savedRecipeID = 1
-                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID))
-                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\comments")
-                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\likes")
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\id.txt", "w") as f:
-                                                                f.write(str(self.savedRecipeID))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\author.txt", "w") as f:
-                                                                f.write(EncryptString(app.loggedInUserInformation[1], "auth") + ";" + EncryptString(app.loggedInUserInformation[2], "auth"))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\date.txt", "w") as f:
-                                                                f.write(EncryptString(str(datetime.datetime.now()), "auth"))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\name.txt", "w") as f:
-                                                                f.write(EncryptString(str(self.recipeNameText.get()), "auth"))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\description.txt", "w") as f:
-                                                                f.write(EncryptString(str(self.recipeDescriptionText.get("1.0", END)), "auth"))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\ingredients.txt", "w") as f:
-                                                                for i in range(self.listboxRecipeIngredients.size()):
-                                                                    f.write(EncryptString(self.listboxRecipeIngredients.get(i), "auth") + "\n")
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\procedure.txt", "w") as f:
-                                                                f.write(EncryptString(str(self.recipeProcedureText.get("1.0", END)), "auth"))
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\categories.txt", "w") as f:
-                                                                for i in range(self.listboxRecipeCategories.size()):
-                                                                    f.write(EncryptString(self.listboxRecipeCategories.get(i), "auth") + "\n")
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\rating.txt", "w") as f:
-                                                                f.write("0.0")
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\favoritedby.txt", "w") as f:
-                                                                pass
-                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views.txt", "w") as f:
-                                                                f.write("0")
-                                                            shutil.copy2(self.recipePictureCanvas.imgpath, os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\picture" + os.path.splitext(self.recipePictureCanvas.imgpath)[1])
-                                                            messagebox.showinfo("Sucesso", "A receita foi criada com sucesso", parent = self.master)
-                                                            self.master.destroy()
-                                                            app.master.update()
-                                                            app.MainProgram_UpdateAllReceiptsPage()
-                                                    else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.master)
-                                                else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 450 caracteres", parent = self.master)
+                                                if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) <= 1250:
+                                                    if str(self.recipeHoursSpinbox.get()) == "0" and str(self.recipeMinutesSpinbox.get()) == "0":
+                                                        messagebox.showerror("Erro", "O tempo de confeção é inválido", parent = self.master)
+                                                    else:
+                                                        if self.listboxRecipeCategories.size() > 0:
+                                                            self.doesUserWantToContinueRecipePicture = True
+                                                            if self.recipePictureCanvas.imgpath.split("\\")[-1] == "default_recipes.jpg":
+                                                                self.continueDefaultRecipe = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de receita, se continuar irá ser selecionada a foto de receita padrão, prosseguir?", icon = "warning", parent = self.master)
+                                                                if self.continueDefaultRecipe == "no":
+                                                                    self.doesUserWantToContinueRecipePicture = False
+                                                                else:
+                                                                    if MD5Checksum(2) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+                                                                        messagebox.showerror("Erro", "A foto de receita padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
+                                                                        os._exit(0)
+                                                            if self.doesUserWantToContinueRecipePicture:
+                                                                CreatePath()
+                                                                self.wasAnyIdFound = False
+                                                                if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                                                                    for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                                                                        if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                                                                            if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                                                                                self.savedRecipeID = int(os.listdir(os.getcwd() + "\\data\\recipes")[i].split("-")[-1]) + 1
+                                                                                self.wasAnyIdFound = True
+                                                                        else:
+                                                                            if i == (len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1) and not self.wasAnyIdFound:
+                                                                                self.savedRecipeID = 1
+                                                                else: self.savedRecipeID = 1
+                                                                os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID))
+                                                                os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\comments")
+                                                                os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views\\nviews.txt", "w") as f:
+                                                                    f.write("0")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views\\whoviewd.txt", "w") as f:
+                                                                    pass
+                                                                os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\likes")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\likes\\nlikes.txt", "w") as f:
+                                                                    f.write("0")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\likes\\wholiked.txt", "w") as f:
+                                                                    pass
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\id.txt", "w") as f:
+                                                                    f.write(str(self.savedRecipeID))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\author.txt", "w") as f:
+                                                                    f.write(EncryptString(app.loggedInUserInformation[1], "auth") + ";" + EncryptString(app.loggedInUserInformation[2], "auth"))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\date.txt", "w") as f:
+                                                                    f.write(EncryptString(str(datetime.datetime.now()), "auth"))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\name.txt", "w") as f:
+                                                                    f.write(EncryptString(str(self.recipeNameText.get()), "auth"))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\description.txt", "w") as f:
+                                                                    f.write(EncryptString(str(self.recipeDescriptionText.get("1.0", END)), "auth"))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\ingredients.txt", "w") as f:
+                                                                    for i in range(self.listboxRecipeIngredients.size()):
+                                                                        f.write(EncryptString(self.listboxRecipeIngredients.get(i), "auth") + "\n")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\procedure.txt", "w") as f:
+                                                                    f.write(EncryptString(str(self.recipeProcedureText.get("1.0", END)), "auth"))
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\categories.txt", "w") as f:
+                                                                    for i in range(self.listboxRecipeCategories.size()):
+                                                                        f.write(EncryptString(self.listboxRecipeCategories.get(i), "auth") + "\n")
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\rating.txt", "w") as f:
+                                                                    pass
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\favoritedby.txt", "w") as f:
+                                                                    pass
+                                                                with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\time.txt", "w") as f:
+                                                                    f.write(str(self.recipeHoursSpinbox.get()) + ";" + str(self.recipeMinutesSpinbox.get()))
+                                                                shutil.copy2(self.recipePictureCanvas.imgpath, os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\picture" + os.path.splitext(self.recipePictureCanvas.imgpath)[1])
+                                                                messagebox.showinfo("Sucesso", "A receita foi criada com sucesso", parent = self.master)
+                                                                self.master.destroy()
+                                                                app.master.update()
+                                                                app.MainProgram_UpdateAllReceiptsPage()
+                                                        else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.master)
+                                                else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 1250 caracteres", parent = self.master)
                                             else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)
                                         else: messagebox.showerror("Erro", "O campo de procedimenos da receita é obrigatório", parent = self.master)
                                     else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 ingrediente", parent = self.master)

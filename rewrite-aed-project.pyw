@@ -470,7 +470,6 @@ class MainProgram:
             if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
                 messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
                 os._exit(0)
-
             for i in range(100):
                 self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
                 self.allRecipesCard.pack(pady = 3)

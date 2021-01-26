@@ -148,31 +148,161 @@ class MainProgram:
             if a == 1: self.MainProgram_UsersRecipesPage()
             if a == 2: self.MainProgram_AllRecipesPage()
 
-        def CreateAdminWindow():
+        def AddCategoryAdmin():
+
+            def AddNewCategoryAdmin():
+                with open(os.getcwd() + "\\data\\categories\\categories.txt", "a", encoding = "utf-8") as f:
+                    self.categoriesListbox.insert("end",self.catgoryIngredientsText.get())
+                    f.write(self.catgoryIngredientsText.get()+"\n")
+                    AddNewCategoryClose()
+                    
+            def AddNewCategoryClose():
+                self.addNewCategoryWindowAdmin.destroy()
+                self.master.update()
+                self.master.grab_set()
+            
+            # [Layout] - Add ingredient window
+            self.addNewCategoryWindowAdmin = Toplevel(self.master)
+            self.addNewCategoryWindowAdmin.geometry("250x100")
+            CenterWindow(self.addNewCategoryWindowAdmin)
+            self.addNewCategoryWindowAdmin.title("Adicionar Categoria")
+            self.addNewCategoryWindowAdmin.resizable(False, False)
+            self.addNewCategoryWindowAdmin.grab_set()
+            self.addNewCategoryWindowAdmin.protocol("WM_DELETE_WINDOW", AddNewCategoryClose)
+
+            # [Layout] - Add new ingredient textbox
+            self.categoryAddLabel = Label(self.addNewCategoryWindowAdmin, text = "Nome da categoria:")
+            self.categoryAddLabel.place(x = 60, y = 10)
+            self.catgoryIngredientsText = Entry(self.addNewCategoryWindowAdmin, width = 35)
+            self.catgoryIngredientsText.place(x = 18, y = 35)
+            self.catgoryIngredientsText.focus_force()
+
+            # [Layout] - Add new ingredient button
+            self.recipeIngredientsButton = ttk.Button(self.addNewCategoryWindowAdmin, text = "Adicionar", command = AddNewCategoryAdmin)
+            self.recipeIngredientsButton.place(x = 85, y = 65)
+
+        def RemoveCategoryAdmin():
+            try:
+                self.selectedIngredientAdmin = self.categoriesListbox.curselection()[0]
+                self.categoriesListbox.delete(self.selectedIngredientAdmin)
+            except:
+                messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.adminCatWindow)
+        
+        def EditCategoryAdmin():
+            def UpdateCatgory():
+                self.categoriesListbox.delete(self.selectedCategoryAdmin)
+                self.categoriesListbox.insert(self.selectedCategoryAdmin, self.categoryTextAdmin.get())
+                EditNewCategoryClose()
+            def EditNewCategoryClose():
+                self.editNewCategoryWindow.destroy()
+                self.master.update()
+                self.master.grab_set()
+
+            try:
+                self.selectedCategoryAdmin = self.categoriesListbox.curselection()[0]
+                # print(self.categoriesListbox.curselection())
+                # [Layout] - Edit ingredient window
+                self.editNewCategoryWindow = Toplevel(self.master)
+                self.editNewCategoryWindow.geometry("250x100")
+                CenterWindow(self.editNewCategoryWindow)
+                self.editNewCategoryWindow.title("Editar Ingrediente")
+                self.editNewCategoryWindow.resizable(False, False)
+                self.editNewCategoryWindow.grab_set()
+                self.editNewCategoryWindow.protocol("WM_DELETE_WINDOW", EditNewCategoryClose)
+                # [Layout] - Edit ingredient textbox
+                self.categoryEditLabel = Label(self.editNewCategoryWindow, text = "Nome do ingrediente:")
+                self.categoryEditLabel.place(x = 60, y = 10)
+                self.categoryTextAdmin = Entry(self.editNewCategoryWindow, width = 35)
+                self.categoryTextAdmin.insert("end",self.categoriesListbox.get(self.selectedCategoryAdmin).strip())
+                self.categoryTextAdmin.place(x = 18, y = 35)
+                self.categoryTextAdmin.focus_force()
+                # [Layout] - Edit ingredient button
+                self.editCategoryButtonAdmin = ttk.Button(self.editNewCategoryWindow, text = "Editar", command = UpdateCatgory)
+                self.editCategoryButtonAdmin.place(x = 85, y = 65)
+            except:
+                messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.adminCatWindow)
+
+        def UpdateListboxUsersAdmin():
+            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
+                for line in f.readlines():
+                    if line.split(";")[0][-10:] == EncryptSHA256("user")[:10]:
+                        self.usersListbox.insert("end", DecryptString(line.split(";")[2],line.split(";")[0][:-10])+" | Utilizador")
+                    else: 
+                        self.usersListbox.insert("end", DecryptString(line.split(";")[2],line.split(";")[0][:-10])+" | Admin")
+
+        def UpdateListboxCatgoriesAdmin():
+            self.categoriesListbox.delete(0,"end")
+            with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding="utf-8") as f:
+                for line in f.readlines():
+                    self.categoriesListbox.insert("end", line)
+
+        def SaveModifies():
+            with open(os.getcwd() + "\\data\\categories\\categories.txt", "w", encoding="utf-8") as f:
+                
+                for i in range(self.categoriesListbox.size()):
+                    f.write(self.categoriesListbox.get(i).strip()+"\n")
+            messagebox.showinfo("Sucesso", "As alterações foram guardadas", parent = self.adminCatWindow)
+
+        def CreateAdminCategoriesWindow():
             # [Initial configuration]
-            self.adminWindow=Tk()
-            self.adminWindow.geometry("300x300")
-            CenterWindow(self.adminWindow)
-            self.adminWindow.title("Admin")
-            self.adminWindow.resizable(False, False)
+            self.adminCatWindow=Toplevel(self.master)
+            self.adminCatWindow.geometry("300x300")
+            CenterWindow(self.adminCatWindow)
+            self.adminCatWindow.title("Admin - Categorias")
+            self.adminCatWindow.resizable(False, False)
             # [Layout] - Title
-            self.adminTitle=Label(self.adminWindow, text="Area de Admin", font=("Helvetica 15 bold"))
-            self.adminTitle.pack(side = TOP, anchor=CENTER, pady=20)
+            self.adminCatTitle=Label(self.adminCatWindow, text="Area de Admin - Categorias", font=("Helvetica 15 bold"))
+            self.adminCatTitle.pack(side = TOP, anchor=CENTER, pady=20)
             # [Layout] - Label Frame
-            self.categoriesLabelFrame=LabelFrame(self.adminWindow, height="200", width="270", text="Categorias")
+            self.categoriesLabelFrame=LabelFrame(self.adminCatWindow, height="200", width="270", text="Categorias")
             self.categoriesLabelFrame.place(x=10,y=70)
             # [Layout] - Show categories
             self.categoriesListbox=Listbox(self.categoriesLabelFrame)
             self.categoriesListbox.place(x=10,y=10)
+            #Show Categories in Listbox
+            UpdateListboxCatgoriesAdmin()
             # [Layout] - Add categories
-            self.categoriesAddButton=ttk.Button(self.categoriesLabelFrame, text="Adicionar")
+            self.categoriesAddButton=ttk.Button(self.categoriesLabelFrame, text="Adicionar", command=AddCategoryAdmin)
             self.categoriesAddButton.place(x=150,y=20)
             # [Layout] - Remove categories
-            self.categoriesRemoveButton=ttk.Button(self.categoriesLabelFrame, text="Remover")
-            self.categoriesRemoveButton.place(x=150,y=80)
+            self.categoriesRemoveButton=ttk.Button(self.categoriesLabelFrame, text="Remover", command=RemoveCategoryAdmin)
+            self.categoriesRemoveButton.place(x=150,y=60)
             # [Layout] - Edit categories
-            self.categoriesEditButton=ttk.Button(self.categoriesLabelFrame, text="Editar")
-            self.categoriesEditButton.place(x=150,y=140)
+            self.categoriesEditButton=ttk.Button(self.categoriesLabelFrame, text="Editar", command=EditCategoryAdmin)
+            self.categoriesEditButton.place(x=150,y=100)
+            # [Layout] - Save all
+            self.categoriesSaveButton=ttk.Button(self.categoriesLabelFrame, text="Guardar alterações", command=SaveModifies)
+            self.categoriesSaveButton.place(x=150,y=140)
+
+        def CreateAdminUsersWindow():
+            def ChangeUserType():
+                try:
+                    self.selectedUserAdmin = self.usersListbox.curselection()[0]
+                except:
+                    messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.adminCatWindow)
+            # [Initial configuration]
+            self.adminUsersWindow=Toplevel(self.master)
+            self.adminUsersWindow.geometry("400x300")
+            CenterWindow(self.adminUsersWindow)
+            self.adminUsersWindow.title("Admin - Utilizadores")
+            self.adminUsersWindow.resizable(False, False)
+            # [Layout] - Title
+            self.adminUsersTitle=Label(self.adminUsersWindow, text="Area de Admin - Utilizadores", font=("Helvetica 15 bold"))
+            self.adminUsersTitle.pack(side = TOP, anchor=CENTER, pady=20)
+            # [Layout] - Label Frame
+            self.usersLabelFrame=LabelFrame(self.adminUsersWindow, height="200", width="370", text="Utilizadores")
+            self.usersLabelFrame.place(x=10,y=70)
+            # [Layout] - Show users
+            self.usersListbox=Listbox(self.usersLabelFrame, width="37")
+            self.usersListbox.place(x=10,y=10)
+            #Show Categories in Listbox
+            UpdateListboxUsersAdmin()
+            # [Layout] - Change type
+            self.usersChageTypeButton=ttk.Button(self.usersLabelFrame, text="Alterar tipo", command=ChangeUserType)
+            self.usersChageTypeButton.place(x=250,y=20)
+            # [Layout] - Save all
+            self.usersSaveButton=ttk.Button(self.usersLabelFrame, text="Guardar alterações", command="noaction")
+            self.usersSaveButton.place(x=250,y=140)
 
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
@@ -205,7 +335,8 @@ class MainProgram:
             self.master.geometry("850x518")
             self.adminBar = Menu(self.master)
             self.adminMenu = Menu(self.adminBar, tearoff = 0)
-            self.adminMenu.add_command(label = "Admin", command = CreateAdminWindow)
+            self.adminMenu.add_command(label = "Categorias", command = CreateAdminCategoriesWindow)
+            self.adminMenu.add_command(label = "Utilizadores", command = CreateAdminUsersWindow)
             self.adminBar.add_cascade(label = "Admin", menu = self.adminMenu)
             self.master.configure(menu = self.adminBar)
         else: self.master.geometry("850x500")
@@ -311,32 +442,62 @@ class MainProgram:
         if not self.hasUserGoneToPage0:
             self.hasUserGoneToPage0 = True
 
+            def UpdatePerfil():
+
+                #Colocar a encryptar e guardar no ficheiro
+                #Colocar a encryptar e guardar no ficheiro
+                #Colocar a encryptar e guardar no ficheiro
+                #Colocar a encryptar e guardar no ficheiro
+
+                print("hey")
+
             # [Layout] - Title
-            self.editNameLabel=Label(self.tabEditProfile, text="Editar Perfil")
-            self.editNameLabel.place(x=245,y=40)
-            self.editNameLabel.config(font = ('Helvetica 15 bold'))
+            self.titlePerfilLabel=Label(self.tabEditProfile, text="Editar Perfil")
+            self.titlePerfilLabel.pack(side=TOP, pady="20")
+            self.titlePerfilLabel.config(font = ('Helvetica 15 bold'))
+
+            # [Layout] - Fieldset
+            self.editPerfilLabelFrame= LabelFrame(self.tabEditProfile, height="300", width="400")
+            self.editPerfilLabelFrame.place(relx=0.5, rely=0.5, anchor=CENTER)
 
             # [Layout] - Edit Name
-            self.editNameLabel=Label(self.tabEditProfile, text="Nome")
-            self.editNameLabel.place(x=178,y=130)
-            self.editNameEntry=Entry(self.tabEditProfile, width="30")
-            self.editNameEntry.place(x=240,y=130)
+            self.editNameLabel=Label(self.editPerfilLabelFrame, text="Nome")
+            self.editNameLabel.place(x=74,y=20)
+            self.editNameEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editNameEntry.place(x=130,y=20)
 
             # [Layout] - Edit Email
-            self.editEmailLabel=Label(self.tabEditProfile, text="Email")
-            self.editEmailLabel.place(x=180,y=180)
-            self.editEmailEntry=Entry(self.tabEditProfile, width="30")
-            self.editEmailEntry.place(x=240,y=180)
+            self.editEmailLabel=Label(self.editPerfilLabelFrame, text="Email")
+            self.editEmailLabel.place(x=76,y=70)
+            self.editEmailEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editEmailEntry.place(x=130,y=70)
 
-            # [Layout] - Edit Password
-            self.editPasswordLabel=Label(self.tabEditProfile, text="Password")
-            self.editPasswordLabel.place(x=160,y=230)
-            self.editPasswordEntry=Entry(self.tabEditProfile, width="30")
-            self.editPasswordEntry.place(x=240,y=230)
+            #Verificar se password é igual
+            #Verificar se password é igual
+            #Verificar se password é igual
+            #Verificar se password é igual
+
+            # [Layout] - Password Antiga
+            self.oldPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Antiga")
+            self.oldPasswordLabel.place(x=20,y=120)
+            self.oldPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.oldPasswordEntry.place(x=130,y=120)
+
+            # [Layout] - New Password
+            self.editPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Nova")
+            self.editPasswordLabel.place(x=26,y=170)
+            self.editPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editPasswordEntry.place(x=130,y=170)
 
             # [Layout] - Update Button
-            self.editProfileButton=ttk.Button(self.tabEditProfile, text="Atualizar")
-            self.editProfileButton.place(x=260,y=290)
+            self.editProfileButton=ttk.Button(self.editPerfilLabelFrame, text="Atualizar", command=UpdatePerfil)
+            self.editProfileButton.place(x=155,y=230)
+
+            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
+                for line in f.readlines():
+                    if line.split(";")[0][:-10]==EncryptSHA256(self.loggedInUserInformation[1]):
+                        self.editNameEntry.insert("end", self.loggedInUserInformation[2])
+                        self.editEmailEntry.insert("end", self.loggedInUserInformation[1])
 
     def MainProgram_UsersRecipesPage(self):
         if not self.hasUserGoneToPage1:
@@ -361,6 +522,8 @@ class MainProgram:
             self.usersRecipesSearchByIngredientText.place(x = 8, y = 80)
             self.usersRecipesSearchByIngredientClearButton = ttk.Button(self.usersRecipesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersRecipesSearchByIngredientText))
             self.usersRecipesSearchByIngredientClearButton.place(x = 165, y = 77)
+            
+
 
             # [Layout] - Search by category filter
             self.usersRecipesSearchByCategoryLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por categoria:")
@@ -1048,7 +1211,7 @@ class Recipe:
 
         def RemoveCategory():
             try:
-                self.selectedCategory = self.listboxRecipeCategories.curselection()
+                self.selectedCategory = self.listboxRecipeCategories.curselection()[0]
                 self.listboxRecipeCategories.delete(self.selectedCategory)
             except:
                 messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.master)
@@ -1219,7 +1382,7 @@ class Recipe:
 
     def RemoveIngredient(self):
         try:
-            self.selectedIngredient = self.listboxRecipeIngredients.curselection()
+            self.selectedIngredient = self.listboxRecipeIngredients.curselection()[0]
             self.listboxRecipeIngredients.delete(self.selectedIngredient)
         except:
             messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.master)

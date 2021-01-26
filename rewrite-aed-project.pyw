@@ -29,6 +29,12 @@ from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 
+# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
+# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
+# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
+# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
+# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
+
 def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data"): os.mkdir(os.getcwd() + "\\data")
     if not os.path.exists(os.getcwd() + "\\data\\user"): os.mkdir(os.getcwd() + "\\data\\user")
@@ -157,6 +163,25 @@ class MainProgram:
             if a == 1: self.MainProgram_UsersRecipesPage()
             if a == 2: self.MainProgram_AllRecipesPage()
 
+        def UpdateFiltersList():
+            self.globalCategoriesList = []
+            self.filtersCategoriesList = ["Qualquer"]
+            self.isAtLeastOneCategoryAvailable = False
+            CreatePath()
+            if os.path.exists(os.getcwd() + "\\data\\categories\\categories.txt"):
+                with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.globalCategoriesList.append(line.strip())
+                            self.filtersCategoriesList.append(line.strip())
+                            self.isAtLeastOneCategoryAvailable = True
+                    if not self.isAtLeastOneCategoryAvailable:
+                        messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
+                        os._exit(0)
+            else:
+                messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
+                os._exit(0)
+
         def CreateAdminCategoriesWindow():
             def AdminCategoriesCustomClose():
                 self.adminCatWindow.destroy()
@@ -167,6 +192,9 @@ class MainProgram:
                 with open(os.getcwd() + "\\data\\categories\\categories.txt", "w", encoding="utf-8") as f:
                     for i in range(self.categoriesListbox.size()):
                         f.write(self.categoriesListbox.get(i).strip()+"\n")
+                UpdateFiltersList()
+                self.searchByCategoryDropdown["value"] = self.filtersCategoriesList
+                self.usersRecipesSearchByCategoryDropdown["value"] = self.filtersCategoriesList
                 messagebox.showinfo("Sucesso", "As alterações foram guardadas", parent = self.adminCatWindow)
 
             def AddCategoryAdmin():
@@ -350,7 +378,7 @@ class MainProgram:
 
             # [Initial configuration]
             self.adminUsersWindow=Toplevel(self.master)
-            self.adminUsersWindow.geometry("400x300")
+            self.adminUsersWindow.geometry("390x280")
             CenterWindow(self.adminUsersWindow)
             self.adminUsersWindow.title("Admin - Utilizadores")
             self.adminUsersWindow.resizable(False, False)
@@ -382,24 +410,7 @@ class MainProgram:
         self.hasUserGoneToPage3 = False
         self.hasUserGoneToPage4 = False
 
-        # [Configuration] - Load categories to a global list
-        self.globalCategoriesList = []
-        self.filtersCategoriesList = ["Qualquer"]
-        self.isAtLeastOneCategoryAvailable = False
-        CreatePath()
-        if os.path.exists(os.getcwd() + "\\data\\categories\\categories.txt"):
-            with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
-                    if line.strip().replace(" ", ""):
-                        self.globalCategoriesList.append(line.strip())
-                        self.filtersCategoriesList.append(line.strip())
-                        self.isAtLeastOneCategoryAvailable = True
-                if not self.isAtLeastOneCategoryAvailable:
-                    messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
-                    os._exit(0)
-        else:
-            messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
-            os._exit(0)
+        UpdateFiltersList()
 
         # [Layout] - Admin menu
         if self.loggedInUserInformation[3] == "admin":
@@ -701,17 +712,6 @@ class MainProgram:
             self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
             self.createRecipeButton.place(x = 140, y = 10)
 
-
-
-            # self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
-            # self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            # self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
-            # self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            # self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
-            # self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
-            # self.recipesSecondFrame = Frame(self.recipesCanvas)
-            # self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
-
             self.MainProgram_UpdateAllReceiptsPage()
 
     def MainProgram_GlobalFunctions(self, func, *arg):
@@ -885,6 +885,29 @@ class MainProgram:
                             self.viewsLabelVar = line
                 self.viewsLabel = Label(self.recipeStatistics, text = "Visualizações: " + str(self.viewsLabelVar))
                 self.viewsLabel.place(x = 10, y = 55)
+
+                # [Layout] - Recipe statistics - author
+                self.recipeAuthorEmailVar = ""
+                self.recipeAuthorNameVar = ""
+                with open(path + "\\author.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.recipeAuthorEmailVar = DecryptString(line.split(";")[0], "auth")
+                            self.recipeAuthorNameVar = DecryptString(line.split(";")[1], "auth")
+                self.authorLabel = Label(self.recipeStatistics, text = "Criado por: " + str(self.recipeAuthorNameVar))
+                self.authorLabel.place(x = 245, y = 5)
+
+                # [Layout] - Recipe statistics - creation date
+                self.creationDateLabel = "01/01/2021"
+                self.wasDateFoundChecker = False
+                with open(path + "\\date.txt", "r") as f:
+                    for line in f.readlines():
+                        if line.strip().replace(" ", ""):
+                            self.creationDateLabel = DecryptString(line, "auth")
+                            self.wasDateFoundChecker = True
+                if self.wasDateFoundChecker: self.dateObject = datetime.datetime.strptime(self.creationDateLabel, '%Y-%m-%d %H:%M:%S.%f')
+                self.authorLabel = Label(self.recipeStatistics, text = "Criado em: " + str(self.dateObject.strftime("%d/%m/%Y %H:%M")))
+                self.authorLabel.place(x = 245, y = 30)
 
                 # [Layout] - User interactions fieldset
                 self.userInteractions = LabelFrame(self.recipeDetailsWindow, width = "420", height = "100", text = "Ações")

@@ -5,6 +5,7 @@ import cryptocode # Usado para encriptar informações gerais (primeiros e últi
 import hashlib # Usado para encriptar informações confidenciais (e-mails e passwords) com a função SHA256
 import shutil # Usado para copiar ficheiros de um directório para outro
 import traceback # Usado para facilitar o debugging
+import datetime # Usado para determinar a data em que cada receita foi criada
 from tkinter import *
 from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
@@ -24,6 +25,7 @@ def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data\\user"): os.mkdir(os.getcwd() + "\\data\\user")
     if not os.path.exists(os.getcwd() + "\\data\\images"): os.mkdir(os.getcwd() + "\\data\\images")
     if not os.path.exists(os.getcwd() + "\\data\\recipes"): os.mkdir(os.getcwd() + "\\data\\recipes")
+    if not os.path.exists(os.getcwd() + "\\data\\categories"): os.mkdir(os.getcwd() + "\\data\\categories")
 
 def MD5Checksum(img):
     if img == 1:
@@ -136,6 +138,15 @@ class MainProgram:
             self.app = Login(self.newWindow)
 
     def MainProgram_FrontPage(self):
+        def SwitchTabs(a, b):
+            self.tabControl.select(a)
+            existingButtons = [self.editProfile, self.usersRecipes, self.allRecipes, self.usersFavourite, self.usersNotifications]
+            for button in existingButtons:
+                if button != b: button.config(bg = "#f0f0f0")
+            b.config(bg = "#a8a8a8")
+            if a == 0: self.MainProgram_EditProfile()
+            if a == 1: self.MainProgram_UsersRecipesPage()
+            if a == 2: self.MainProgram_AllRecipesPage()
 
         def CreateAdminWindow():
             # [Initial configuration]
@@ -163,22 +174,31 @@ class MainProgram:
             self.categoriesEditButton=ttk.Button(self.categoriesLabelFrame, text="Editar")
             self.categoriesEditButton.place(x=150,y=140)
 
-        def SwitchTabs(a, b):
-            self.tabControl.select(a)
-            existingButtons = [self.editProfile, self.usersRecipes, self.allRecipes, self.usersFavourite, self.usersNotifications]
-            for button in existingButtons:
-                if button != b: button.config(bg = "#f0f0f0")
-            b.config(bg = "#a8a8a8")
-            if a == 0: self.MainProgram_EditProfile()
-            if a == 1: self.MainProgram_UsersRecipesPage()
-            if a == 2: self.MainProgram_AllRecipesPage()
-            
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
         self.hasUserGoneToPage1 = False
         self.hasUserGoneToPage2 = False
         self.hasUserGoneToPage3 = False
         self.hasUserGoneToPage4 = False
+
+        # [Configuration] - Load categories to a global list
+        self.globalCategoriesList = []
+        self.filtersCategoriesList = ["Qualquer"]
+        self.isAtLeastOneCategoryAvailable = False
+        CreatePath()
+        if os.path.exists(os.getcwd() + "\\data\\categories\\categories.txt"):
+            with open(os.getcwd() + "\\data\\categories\\categories.txt", "r", encoding = "utf-8") as f:
+                for line in f.readlines():
+                    if line.strip().replace(" ", ""):
+                        self.globalCategoriesList.append(line.strip())
+                        self.filtersCategoriesList.append(line.strip())
+                        self.isAtLeastOneCategoryAvailable = True
+                if not self.isAtLeastOneCategoryAvailable:
+                    messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
+                    os._exit(0)
+        else:
+            messagebox.showerror("Erro", "O ficheiro de categorias não tem conteúdo\nO programa irá fechar", parent = self.master)
+            os._exit(0)
 
         # [Layout] - Admin menu
         if self.loggedInUserInformation[3] == "admin":
@@ -345,8 +365,7 @@ class MainProgram:
             # [Layout] - Search by category filter
             self.usersRecipesSearchByCategoryLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por categoria:")
             self.usersRecipesSearchByCategoryLabel.place(x = 225, y = 5)
-            self.usersRecipesSearchByCategoryList = ["Qualquer", "Vegetariano", "Bolos", "Tradicional"]
-            self.usersRecipesSearchByCategoryDropdown = ttk.Combobox(self.usersRecipesFilterPanel, value = self.usersRecipesSearchByCategoryList, width = "25")
+            self.usersRecipesSearchByCategoryDropdown = ttk.Combobox(self.usersRecipesFilterPanel, value = self.filtersCategoriesList, width = "25")
             self.usersRecipesSearchByCategoryDropdown.place(x = 228, y = 30)
             self.usersRecipesSearchByCategoryDropdown.current(0)
             self.usersRecipesSearchByCategoryDropdownClearButton = ttk.Button(self.usersRecipesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersRecipesSearchByCategoryDropdown))
@@ -355,7 +374,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.usersRecipesOrderByLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por:")
             self.usersRecipesOrderByLabel.place(x = 225, y = 55)
-            self.usersRecipesOrderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados"]
+            self.usersRecipesOrderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.usersRecipesOrderByDropdown = ttk.Combobox(self.usersRecipesFilterPanel, value = self.usersRecipesOrderByList, width = "25")
             self.usersRecipesOrderByDropdown.place(x = 228, y = 80)
             self.usersRecipesOrderByDropdown.current(0)
@@ -420,8 +439,7 @@ class MainProgram:
             # [Layout] - Search by category filter
             self.searchByCategoryLabel = Label(self.filterPanel, text = "Ordernar por categoria:")
             self.searchByCategoryLabel.place(x = 225, y = 5)
-            self.searchByCategoryList = ["Qualquer", "Vegetariano", "Bolos", "Tradicional"]
-            self.searchByCategoryDropdown = ttk.Combobox(self.filterPanel, value = self.searchByCategoryList, width = "25")
+            self.searchByCategoryDropdown = ttk.Combobox(self.filterPanel, value = self.filtersCategoriesList, width = "25")
             self.searchByCategoryDropdown.place(x = 228, y = 30)
             self.searchByCategoryDropdown.current(0)
             self.searchByCategoryDropdownClearButton = ttk.Button(self.filterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.searchByCategoryDropdown))
@@ -430,7 +448,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.orderByLabel = Label(self.filterPanel, text = "Ordernar por:")
             self.orderByLabel.place(x = 225, y = 55)
-            self.orderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados"]
+            self.orderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.orderByDropdown = ttk.Combobox(self.filterPanel, value = self.orderByList, width = "25")
             self.orderByDropdown.place(x = 228, y = 80)
             self.orderByDropdown.current(0)
@@ -465,27 +483,7 @@ class MainProgram:
             self.recipesSecondFrame = Frame(self.recipesCanvas)
             self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
 
-            # [Layout] - Verifies if the default recipe image exists and/or has been tampered with
-            CreatePath()
-            if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
-                os._exit(0)
-            for i in range(100):
-                self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                self.allRecipesCard.pack(pady = 3)
-                self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
-                self.allRecipesPictureCanvas.place(x = 10, y = 5)
-                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-                self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipesPictureCanvas.imgpath).resize((65, 65)))
-                self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
-                self.allRecipesName = Label(self.allRecipesCard, text = "ola")
-                self.allRecipesName.place(x = 90, y = 5)
-                self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes:")
-                self.allRecipesLikes.place(x = 90, y = 55)
-                self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: Diogo Borges, 24/01/2021")
-                self.allRecipesCreator.place(x = 200, y = 55)
-                self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = self.MainProgram_ShowRecipeDetails)
-                self.allRecipesSeeMore.place(x = 500, y = 27)
+            self.MainProgram_UpdateAllReceiptsPage()
 
     def MainProgram_GlobalFunctions(self, func, *arg):
         def ClearFilters(a):
@@ -512,8 +510,8 @@ class MainProgram:
     def MainProgram_AddRecipe(self):
         self.newRecipeWindow = Toplevel(self.master)
         self.app = Recipe(self.newRecipeWindow)
-    
-    def MainProgram_ShowRecipeDetails(self):
+
+    def MainProgram_ShowRecipeDetails(self, id = 0):
         def LikeRecipe():
             if self.likeButton.currentImg == "heartIcon2.png":
                 self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon.png").resize((30, 30)))
@@ -545,7 +543,9 @@ class MainProgram:
         self.recipeDetailsWindow.grab_set()
         self.recipeDetailsWindow.focus_force()
         self.recipeDetailsWindow.protocol("WM_DELETE_WINDOW", RecipeDetailsCustomClose)
-        
+
+        if id >= 1: messagebox.showinfo("Sucesso", "Funcionou!", parent = self.recipeDetailsWindow)
+
         self.recipeDetailsPictureCanvas = Canvas(self.recipeDetailsWindow, width = "110", height = "110")
         self.recipeDetailsPictureCanvas.place(x = 320, y = 5)
         self.recipeDetailsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
@@ -593,27 +593,27 @@ class MainProgram:
         self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30, 30)))
         self.likeButton = Button(self.recipeDetailsWindow, image = self.likeImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = LikeRecipe)
         self.likeButton.currentImg = "heartIcon2.png"
-        self.likeButton.place(x = 10 , y = 400)
+        self.likeButton.place(x = 10, y = 400)
 
         # [Layout] - Recipe interaction - favorites
         self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30, 30)))
         self.favButton = Button(self.recipeDetailsWindow, image = self.favImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
         self.favButton.currentImg = "favIcon2.png"
-        self.favButton.place(x = 50 , y = 400)
+        self.favButton.place(x = 50, y = 400)
 
         # [Layout] - Recipe interaction - views
-        self.viewsLabel=Label(self.recipeDetailsWindow, text="Visualizações: ")
-        self.viewsLabel.place(x = 90 , y = 405)
+        self.viewsLabel=Label(self.recipeDetailsWindow, text="Visualizações:")
+        self.viewsLabel.place(x = 90, y = 405)
 
         # [Layout] - Recipe interaction - rating
-        self.ratingLabel=Label(self.recipeDetailsWindow, text="Rating: ")
+        self.ratingLabel=Label(self.recipeDetailsWindow, text="Rating:")
         self.ratingLabel.place(x = 10 , y = 455)
         self.ratingSpinBox=Spinbox(self.recipeDetailsWindow, from_=1, to=5, width=2)
         self.ratingSpinBox.place(x=62 , y=455)
         self.ratingButton=ttk.Button(self.recipeDetailsWindow, text="Votar")
         self.ratingButton.place(x=100 , y=450)
 
-
+        # [Layout] - Recipe interaction - users comments fieldset
         self.commentsLabelFrame=LabelFrame(self.recipeDetailsWindow, width="390", height="400", text="Comentários")
         self.commentsLabelFrame.place(x=440, y=10)
 
@@ -634,10 +634,101 @@ class MainProgram:
             self.allComments.pack(pady = 3)
 
         # [Layout] - Recipe interaction - comment textbox
-        self.commentArea = Text(self.recipeDetailsWindow, width = "40", height = "2")
+        self.commentArea = Text(self.recipeDetailsWindow, width = "40", height = "2", font = ('TkDefaultFont'))
         self.commentArea.place(x = 440, y = 430)
         self.addCommentIcon = ttk.Button(self.recipeDetailsWindow, text="Add")
         self.addCommentIcon.place(x = 770, y = 435)
+
+    def MainProgram_UpdateAllReceiptsPage(self):
+        self.ClearWindowWidgets(self.recipesSecondFrame)
+
+        # [Layout] - Verifies if the default recipe image exists and/or has been tampered with
+        CreatePath()
+        if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+            messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+            os._exit(0)
+
+        self.shouldTheNoRecipesCardBeDisplayed = False
+        self.recipeFound = False
+        if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+            for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                    if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                            self.recipeFound = True
+
+                            self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                            self.allRecipesCard.pack(pady = 3)
+
+                            self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
+                            self.allRecipesPictureCanvas.place(x = 10, y = 5)
+                            if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
+                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
+                            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
+                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
+                            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+                            else:
+                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                            self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipesPictureCanvas.imgpath).resize((65, 65)))
+                            self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
+
+                            self.recipeTitle = ""
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.recipeTitle = DecryptString(line, "auth")
+                            self.allRecipesName = Label(self.allRecipesCard, text = self.recipeTitle)
+                            self.allRecipesName.place(x = 90, y = 5)
+
+                            self.recipeLikes = 0
+                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
+                                # Continuar para ver os likes
+                                pass
+                            self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + str(self.recipeLikes))
+                            self.allRecipesLikes.place(x = 90, y = 55)
+
+                            self.recipeAuthorName = "Erro"
+                            self.recipeAuthorEmail = "Erro"
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.recipeAuthorEmail = DecryptString(line.split(";")[0], "auth")
+                                        self.recipeAuthorName = DecryptString(line.split(";")[1], "auth")
+
+                            self.recipeCreationDate = "01/01/2021"
+                            self.wasDateFound = False
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.recipeCreationDate = DecryptString(line, "auth")
+                                        self.wasDateFound = True
+                            if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeCreationDate, '%Y-%m-%d %H:%M:%S.%f')
+                            self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipeAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
+                            self.allRecipesCreator.place(x = 200, y = 55)
+
+                            self.recipeId = 0
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.recipeId = int(line)
+
+                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId))
+                            self.allRecipesSeeMore.place(x = 500, y = 27)
+
+        else: self.shouldTheNoRecipesCardBeDisplayed = True
+
+        if self.shouldTheNoRecipesCardBeDisplayed or not self.recipeFound:
+            self.noRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+            self.noRecipesFoundCard.pack(pady = 3)
+            self.noRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
+            self.noRecipesLabel.place(x = 200, y = 35)
+
+        self.master.update()
+        self.recipesFrame.update()
+        self.recipesCanvas.update()
+        self.recipesCanvasScrollbar.update()
+        self.recipesSecondFrame.update()
 
 class Login:
     def __init__(self, master):
@@ -915,15 +1006,61 @@ class Recipe:
             self.master.destroy()
             app.master.update()
 
+        def AddCategory():
+            def AddCategoryToList():
+                # Verify if category has already been chosen
+                self.wasCategoryAlreadyChosen = False
+                for i in range(self.listboxRecipeCategories.size()):
+                    if self.selectNewCategoryDropdown.get() == self.listboxRecipeCategories.get(i):
+                        self.wasCategoryAlreadyChosen = True
+                        break
+                if not self.wasCategoryAlreadyChosen:
+                    self.listboxRecipeCategories.insert(END, self.selectNewCategoryDropdown.get())
+                    AddCategoryCustomClose()
+                else:
+                    messagebox.showerror("Erro", "A categoria selecionada já foi escolhida", parent = self.addCategoryWindow)
+
+            def AddCategoryCustomClose():
+                self.addCategoryWindow.destroy()
+                self.master.update()
+                self.master.grab_set()
+
+            # [Initial configuration]
+            self.addCategoryWindow = Toplevel(self.master)
+            self.addCategoryWindow.geometry("250x100")
+            CenterWindow(self.addCategoryWindow)
+            self.addCategoryWindow.title("Adicionar Categoria")
+            self.addCategoryWindow.resizable(False, False)
+            self.addCategoryWindow.grab_set()
+            self.addCategoryWindow.focus_force()
+            self.addCategoryWindow.protocol("WM_DELETE_WINDOW", AddCategoryCustomClose)
+
+            # [Layout] - Category select box
+            self.selectNewCategoryLabel = Label(self.addCategoryWindow, text = "Categoria:")
+            self.selectNewCategoryLabel.place(x = 90, y = 5)
+            self.selectNewCategoryDropdown = ttk.Combobox(self.addCategoryWindow, value = app.globalCategoriesList, width = "25")
+            self.selectNewCategoryDropdown.place(x = 40, y = 40)
+            self.selectNewCategoryDropdown.current(0)
+
+            # [Layout] - Add category button
+            self.addNewCategoryButton = ttk.Button(self.addCategoryWindow, text = "Adicionar", command = AddCategoryToList)
+            self.addNewCategoryButton.place(x = 85, y = 65)
+
+        def RemoveCategory():
+            try:
+                self.selectedCategory = self.listboxRecipeCategories.curselection()
+                self.listboxRecipeCategories.delete(self.selectedCategory)
+            except:
+                messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.master)
+
         # [Initial configuration]
         self.master = master
-        self.master.geometry("500x625")
+        self.master.geometry("500x770")
         CenterWindow(self.master)
         self.master.title("Nova receita")
         self.master.resizable(False, False)
         self.master.grab_set()
         self.master.focus_force()
-        self.master.bind('<Return>', self.SaveNewRecipe)
         self.master.protocol("WM_DELETE_WINDOW", NewRecipeCustomClose)
 
         # [Layout] - Recipe general information fieldset
@@ -995,9 +1132,29 @@ class Recipe:
         self.recipeProcedureText = Text(self.recipeProcedureLabelFrame, height = "4", width = "45", font = ('TkDefaultFont'))
         self.recipeProcedureText.place(x = 150, y = 47.5, anchor = W)
 
+        # [Layout] - Recipe category fieldset
+        self.recipeCategoryLabelFrame = LabelFrame(self.master, text = "Categorias", width = "490", height = "130", bd = "2")
+        self.recipeCategoryLabelFrame.place(x = 5, y = 575)
+
+        # [Layout] - Recipe category textbox
+        self.recipeCategoryLabel = Label(self.recipeCategoryLabelFrame, text = "Categorias:")
+        self.recipeCategoryLabel.place(x = 130, y = 20, anchor = E)
+
+        # [Layout] - Recipe categories list
+        self.listboxRecipeCategories = Listbox(self.recipeCategoryLabelFrame, height = "5", width = "46")
+        self.listboxRecipeCategories.place(x = 149, y = 58, anchor = W)
+
+        # [Layout] - Add categories button
+        self.recipeAddCategory = ttk.Button(self.recipeCategoryLabelFrame, text = "Adicionar", width = "17", command = AddCategory)
+        self.recipeAddCategory.place(x = 15, y = 40)
+
+        # [Layout] - Remove categories button
+        self.recipeRemoveCategory = ttk.Button(self.recipeCategoryLabelFrame, text = "Remover", width = "17", command = RemoveCategory)
+        self.recipeRemoveCategory.place(x = 15, y = 72)
+
         # [Layout] - Add recipe button
         self.addRecipe = Button(self.master, text = "Adicionar", relief = "groove", width = "20", height = "2", command = self.SaveNewRecipe)
-        self.addRecipe.place(x = 175, y = 570)
+        self.addRecipe.place(x = 175, y = 720)
 
     def SelectRecipeImage(self):
         self.pathImageRecipe = filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
@@ -1021,9 +1178,9 @@ class Recipe:
                 except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
 
     def AddNewIngredient(self):
-        def Adicionar():
+        def AddIngredient():
             if self.listboxRecipeIngredients.size() < 30:
-                if str(self.recipeIngredientsText.get()):
+                if str(self.recipeIngredientsText.get()).replace(" ", ""):
                     if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(str(self.recipeIngredientsText.get()).replace(" ", "")):
                         if len(str(self.recipeIngredientsText.get()).replace(" ", "")) > 2:
                             self.listboxRecipeIngredients.insert(END, str(self.recipeIngredientsText.get()))
@@ -1057,7 +1214,7 @@ class Recipe:
         self.recipeIngredientsText.focus_force()
 
         # [Layout] - Add new ingredient button
-        self.recipeIngredientsButton = ttk.Button(self.addNewIngredientWindow, text = "Adicionar", command = Adicionar)
+        self.recipeIngredientsButton = ttk.Button(self.addNewIngredientWindow, text = "Adicionar", command = AddIngredient)
         self.recipeIngredientsButton.place(x = 85, y = 65)
 
     def RemoveIngredient(self):
@@ -1068,42 +1225,81 @@ class Recipe:
             messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.master)
 
     def SaveNewRecipe(self, event = None):
-        if str(self.recipeNameText.get()):
+        if str(self.recipeNameText.get()).replace(" ", ""):
             if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(str(self.recipeNameText.get()).replace(" ", "")):
                 if len(str(self.recipeNameText.get()).replace(" ", "")) > 10:
-                    if str(self.recipeDescriptionText.get("1.0", END)):
-                        if len(str(self.recipeDescriptionText.get("1.0", END)).replace(" ", "")) > 20:
-                            if self.listboxRecipeIngredients.size() > 0:
-                                if str(self.recipeProcedureText.get("1.0", END)):
-                                    if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) > 20:
-                                        self.doesUserWantToContinueRecipePicture = True
-                                        if self.recipePictureCanvas.imgpath.split("\\")[-1] == "default_recipes.jpg":
-                                            self.continueDefaultRecipe = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de receita, se continuar irá ser selecionada a foto de receita padrão, prosseguir?", icon = "warning", parent = self.master)
-                                            if self.continueDefaultRecipe == "no": self.doesUserWantToContinueRecipePicture = False
-                                            else:
-                                                if MD5Checksum(2) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-                                                    messagebox.showerror("Erro", "A foto de receita padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
-                                                    os._exit(0)
-                                        if self.doesUserWantToContinueRecipePicture:
-                                            CreatePath()
-                                            self.wasAnyIdFound = False
-                                            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-                                                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
-                                                    if os.listdir(os.getcwd() + "\\data\\recipes")[i].endswith(".txt"):
-                                                        self.savedRecipeID = int(os.listdir(os.getcwd() + "\\data\\recipes")[i].split(".")[0].split("-")[-1]) + 1
-                                                        self.wasAnyIdFound = True
-                                                    else:
-                                                        if i == (len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1) and not self.wasAnyIdFound:
-                                                            self.savedRecipeID = 1
-                                            else: self.savedRecipeID = 1
-                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" +  str(self.savedRecipeID) + ".txt", "w") as f:
-                                                 f.write("teste " + str(self.savedRecipeID))
-
-                                    else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)
-                                else: messagebox.showerror("Erro", "O campo de procedimenos da receita é obrigatório", parent = self.master)
-                            else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 ingrediente", parent = self.master)
-                        else: messagebox.showerror("Erro", "O campo de descrição da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)
-                    else: messagebox.showerror("Erro", "O campo de descrição da receita é obrigatório", parent = self.master)
+                    if len(str(self.recipeNameText.get()).replace(" ", "")) <= 50:
+                        if str(self.recipeDescriptionText.get("1.0", END)).strip().replace(" ", ""):
+                            if len(str(self.recipeDescriptionText.get("1.0", END)).replace(" ", "")) > 20:
+                                if len(str(self.recipeDescriptionText.get("1.0", END)).replace(" ", "")) <= 255:
+                                    if self.listboxRecipeIngredients.size() > 0:
+                                        if str(self.recipeProcedureText.get("1.0", END)).strip().replace(" ", ""):
+                                            if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) > 20:
+                                                if len(str(self.recipeProcedureText.get("1.0", END)).replace(" ", "")) <= 450:
+                                                    if self.listboxRecipeCategories.size() > 0:
+                                                        self.doesUserWantToContinueRecipePicture = True
+                                                        if self.recipePictureCanvas.imgpath.split("\\")[-1] == "default_recipes.jpg":
+                                                            self.continueDefaultRecipe = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de receita, se continuar irá ser selecionada a foto de receita padrão, prosseguir?", icon = "warning", parent = self.master)
+                                                            if self.continueDefaultRecipe == "no":
+                                                                self.doesUserWantToContinueRecipePicture = False
+                                                            else:
+                                                                if MD5Checksum(2) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+                                                                    messagebox.showerror("Erro", "A foto de receita padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
+                                                                    os._exit(0)
+                                                        if self.doesUserWantToContinueRecipePicture:
+                                                            CreatePath()
+                                                            self.wasAnyIdFound = False
+                                                            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                                                                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                                                                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                                                                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                                                                            self.savedRecipeID = int(os.listdir(os.getcwd() + "\\data\\recipes")[i].split("-")[-1]) + 1
+                                                                            self.wasAnyIdFound = True
+                                                                    else:
+                                                                        if i == (len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1) and not self.wasAnyIdFound:
+                                                                            self.savedRecipeID = 1
+                                                            else: self.savedRecipeID = 1
+                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID))
+                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\comments")
+                                                            os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\likes")
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\id.txt", "w") as f:
+                                                                f.write(str(self.savedRecipeID))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\author.txt", "w") as f:
+                                                                f.write(EncryptString(app.loggedInUserInformation[1], "auth") + ";" + EncryptString(app.loggedInUserInformation[2], "auth"))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\date.txt", "w") as f:
+                                                                f.write(EncryptString(str(datetime.datetime.now()), "auth"))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\name.txt", "w") as f:
+                                                                f.write(EncryptString(str(self.recipeNameText.get()), "auth"))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\description.txt", "w") as f:
+                                                                f.write(EncryptString(str(self.recipeDescriptionText.get("1.0", END)), "auth"))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\ingredients.txt", "w") as f:
+                                                                for i in range(self.listboxRecipeIngredients.size()):
+                                                                    f.write(EncryptString(self.listboxRecipeIngredients.get(i), "auth") + "\n")
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\procedure.txt", "w") as f:
+                                                                f.write(EncryptString(str(self.recipeProcedureText.get("1.0", END)), "auth"))
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\categories.txt", "w") as f:
+                                                                for i in range(self.listboxRecipeCategories.size()):
+                                                                    f.write(EncryptString(self.listboxRecipeCategories.get(i), "auth") + "\n")
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\rating.txt", "w") as f:
+                                                                f.write("0.0")
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\favoritedby.txt", "w") as f:
+                                                                pass
+                                                            with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views.txt", "w") as f:
+                                                                f.write("0")
+                                                            shutil.copy2(self.recipePictureCanvas.imgpath, os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\picture" + os.path.splitext(self.recipePictureCanvas.imgpath)[1])
+                                                            messagebox.showinfo("Sucesso", "A receita foi criada com sucesso", parent = self.master)
+                                                            self.master.destroy()
+                                                            app.master.update()
+                                                            app.MainProgram_UpdateAllReceiptsPage()
+                                                    else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.master)
+                                                else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 450 caracteres", parent = self.master)
+                                            else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)
+                                        else: messagebox.showerror("Erro", "O campo de procedimenos da receita é obrigatório", parent = self.master)
+                                    else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 ingrediente", parent = self.master)
+                                else: messagebox.showerror("Erro", "O campo de descrição da receita não pode exceder os 255 caracteres", parent = self.master)
+                            else: messagebox.showerror("Erro", "O campo de descrição da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)
+                        else: messagebox.showerror("Erro", "O campo de descrição da receita é obrigatório", parent = self.master)
+                    else: messagebox.showerror("Erro", "O campo de nome da receita não pode exceder os 50 caracteres", parent = self.master)
                 else: messagebox.showerror("Erro", "O campo de nome da receita tem de ter, pelo menos, 10 caracteres", parent = self.master)
             else: messagebox.showerror("Erro", "O campo de nome da receita não pode conter caracteres especiais nem números", parent = self.master)
         else: messagebox.showerror("Erro", "O campo de nome da receita é obrigatório", parent = self.master)

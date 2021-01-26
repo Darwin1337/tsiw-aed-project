@@ -136,6 +136,33 @@ class MainProgram:
             self.app = Login(self.newWindow)
 
     def MainProgram_FrontPage(self):
+
+        def CreateAdminWindow():
+            # [Initial configuration]
+            self.adminWindow=Tk()
+            self.adminWindow.geometry("300x300")
+            CenterWindow(self.adminWindow)
+            self.adminWindow.title("Admin")
+            self.adminWindow.resizable(False, False)
+            # [Layout] - Title
+            self.adminTitle=Label(self.adminWindow, text="Area de Admin", font=("Helvetica 15 bold"))
+            self.adminTitle.pack(side = TOP, anchor=CENTER, pady=20)
+            # [Layout] - Label Frame
+            self.categoriesLabelFrame=LabelFrame(self.adminWindow, height="200", width="270", text="Categorias")
+            self.categoriesLabelFrame.place(x=10,y=70)
+            # [Layout] - Show categories
+            self.categoriesListbox=Listbox(self.categoriesLabelFrame)
+            self.categoriesListbox.place(x=10,y=10)
+            # [Layout] - Add categories
+            self.categoriesAddButton=ttk.Button(self.categoriesLabelFrame, text="Adicionar")
+            self.categoriesAddButton.place(x=150,y=20)
+            # [Layout] - Remove categories
+            self.categoriesRemoveButton=ttk.Button(self.categoriesLabelFrame, text="Remover")
+            self.categoriesRemoveButton.place(x=150,y=80)
+            # [Layout] - Edit categories
+            self.categoriesEditButton=ttk.Button(self.categoriesLabelFrame, text="Editar")
+            self.categoriesEditButton.place(x=150,y=140)
+
         def SwitchTabs(a, b):
             self.tabControl.select(a)
             existingButtons = [self.editProfile, self.usersRecipes, self.allRecipes, self.usersFavourite, self.usersNotifications]
@@ -158,7 +185,7 @@ class MainProgram:
             self.master.geometry("850x518")
             self.adminBar = Menu(self.master)
             self.adminMenu = Menu(self.adminBar, tearoff = 0)
-            self.adminMenu.add_command(label = "Admin", command = "noaction")
+            self.adminMenu.add_command(label = "Admin", command = CreateAdminWindow)
             self.adminBar.add_cascade(label = "Admin", menu = self.adminMenu)
             self.master.configure(menu = self.adminBar)
         else: self.master.geometry("850x500")
@@ -290,7 +317,6 @@ class MainProgram:
             # [Layout] - Update Button
             self.editProfileButton=ttk.Button(self.tabEditProfile, text="Atualizar")
             self.editProfileButton.place(x=260,y=290)
-
 
     def MainProgram_UsersRecipesPage(self):
         if not self.hasUserGoneToPage1:
@@ -513,7 +539,7 @@ class MainProgram:
 
         # [Initial configuration]
         self.recipeDetailsWindow = Toplevel(self.master)
-        self.recipeDetailsWindow.geometry("900x600")
+        self.recipeDetailsWindow.geometry("850x600")
         CenterWindow(self.recipeDetailsWindow)
         self.recipeDetailsWindow.title("Receita")
         self.recipeDetailsWindow.resizable(False, False)
@@ -568,17 +594,27 @@ class MainProgram:
         self.likeImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\heartIcon2.png").resize((30, 30)))
         self.likeButton = Button(self.recipeDetailsWindow, image = self.likeImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = LikeRecipe)
         self.likeButton.currentImg = "heartIcon2.png"
-        self.likeButton.place(x = 10, y = 400)
+        self.likeButton.place(x = 10 , y = 400)
 
         # [Layout] - Recipe interaction - favorites
         self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((30, 30)))
         self.favButton = Button(self.recipeDetailsWindow, image = self.favImage, compound = CENTER, relief = "flat", width = "30", height = "30", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
         self.favButton.currentImg = "favIcon2.png"
-        self.favButton.place(x = 50, y = 400)
+        self.favButton.place(x = 50 , y = 400)
 
         # [Layout] - Recipe interaction - views
         self.viewsLabel=Label(self.recipeDetailsWindow, text="Visualizações: ")
-        self.viewsLabel.place(x = 90, y = 405)
+        self.viewsLabel.place(x = 90 , y = 405)
+
+        # [Layout] - Recipe interaction - rating
+        self.ratingLabel=Label(self.recipeDetailsWindow, text="Rating: ")
+        self.ratingLabel.place(x = 10 , y = 455)
+        self.ratingSpinBox=Spinbox(self.recipeDetailsWindow, from_=1, to=5, width=2)
+        self.ratingSpinBox.place(x=62 , y=455)
+        self.ratingButton=ttk.Button(self.recipeDetailsWindow, text="Votar")
+        self.ratingButton.place(x=100 , y=450)
+
+
         self.commentsLabelFrame=LabelFrame(self.recipeDetailsWindow, width="390", height="400", text="Comentários")
         self.commentsLabelFrame.place(x=440, y=10)
 

@@ -1259,8 +1259,10 @@ class MainProgram:
                     self.dateComment.place(x=250,y=3)
                     separator = ttk.Separator(self.allComments, orient='horizontal')
                     separator.place(relx=0, rely=0.37, relwidth=1)
-                    self.commentText=Label(self.allComments, wraplength = 330, justify = LEFT, text="asdasdasdasdasdasdasdasdasdasdasdasdasdadasdasdasasdasdasdasdasdasdasdadasdasd")
+                    self.commentText=Label(self.allComments, wraplength = 310, justify = LEFT, text="asdasdasdasdasdasdasdasdasdasdasdasdasdadasdasdasasdasdasdasdasdasdasdadasdasd")
                     self.commentText.place(x=3,y=30)
+                    self.removeCommentButton=Button(self.allComments, text="X", width="2", relief="groove")
+                    self.removeCommentButton.place(x=320,y=35)
 
                 # [Layout] - Recipe interaction - comment textbox
                 self.commentArea = Text(self.commentsLabelFrame, width = "62", height = "5", wrap = WORD, font = ('TkDefaultFont'))

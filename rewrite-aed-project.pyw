@@ -11,6 +11,7 @@ from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
+#Commit!!!!
 # pip install cryptocode
 # pip install PySide2
 # pip install Pillow

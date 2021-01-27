@@ -536,26 +536,78 @@ class MainProgram:
                 #Colocar a encryptar e guardar no ficheiro
                 #Colocar a encryptar e guardar no ficheiro
 
+            def ChangeAvaImage():
+                self.imageCheckEdit, self.path = False, filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
+                if self.path:
+                    try:
+                        Image.open(self.path).verify()
+                        self.imageCheckEdit = True
+                    except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem", parent = self.master)
+                    if self.imageCheckEdit:
+                        try:
+                            if Image.open(self.path).size[0] == Image.open(self.path).size[1]:
+                                if Image.open(self.path).size[0] >= 50:
+                                    if os.stat(self.path).st_size <= 5000000:
+                                        print("hey")
+                                        # origin.imgpath = self.path
+                                        # origin.image = ImageTk.PhotoImage(Image.open(origin.imgpath).resize((50, 50)))
+                                        # origin["image"] = origin.image
+                                    else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.master)
+                                else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px", parent = self.master)
+                            else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais", parent = self.master)
+                        except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema", parent = self.master)
+                        except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
             # [Layout] - Title
             self.titlePerfilLabel=Label(self.tabEditProfile, text="Editar Perfil")
             self.titlePerfilLabel.pack(side=TOP, pady="20")
             self.titlePerfilLabel.config(font = ('Helvetica 15 bold'))
 
             # [Layout] - Fieldset
-            self.editPerfilLabelFrame= LabelFrame(self.tabEditProfile, height="300", width="400")
+            self.editPerfilLabelFrame= LabelFrame(self.tabEditProfile, height="400", width="400")
             self.editPerfilLabelFrame.place(relx=0.5, rely=0.5, anchor=CENTER)
+
+            # [Layout] - User Avatar
+            self.possiblePaths = [EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".jpeg", EncryptSHA256(self.loggedInUserInformation[1])[:15] + ".png"]
+            self.wasPhotoFound = False
+            for path in self.possiblePaths:
+                if os.path.exists(os.getcwd() + "\\data\\images\\" + path):
+                    self.profilePictureEdit = Label(self.editPerfilLabelFrame)
+                    self.profilePictureEdit.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
+                    self.profilePictureEdit["image"] = self.profilePictureEdit.image
+                    self.profilePictureEdit.place(x = 158, y = 10)
+                    self.wasPhotoFound = True
+                    break
+            if not self.wasPhotoFound:
+                if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
+                    if MD5Checksum(1) == "28c17e68aa44166d1c8e716bd535676a":
+                        self.profilePictureEdit = Label(self.editPerfilLabelFrame)
+                        self.profilePictureEdit.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
+                        self.profilePictureEdit["image"] = self.profilePictureEdit.image
+                        self.profilePictureEdit.place(x = 158, y = 10)
+                    else:
+                        messagebox.showerror("Erro", "A foto de perfil padrão não foi reconhecida\nO programa irá fechar", parent = self.master)
+                        os._exit(0)
+                else:
+                    messagebox.showerror("Erro", "O ficheiro 'data\images\default.jpg' está em falta\nO programa irá fechar", parent = self.master)
+                    os._exit(0)
+
+            # [Layout] - Button edit avatar
+            self.editAvaButton=ttk.Button(self.editPerfilLabelFrame, text="Alterar imagem", command=ChangeAvaImage)
+            self.editAvaButton.place(x=150 ,y=100)
+            self.editAvaLabel=Label(self.editPerfilLabelFrame, text = ".jpg .jpeg ou .png", wraplength = 140, justify = LEFT, font=(None, 8))
+            self.editAvaLabel.place(x=250 , y=105)
 
             # [Layout] - Edit Name
             self.editNameLabel=Label(self.editPerfilLabelFrame, text="Nome")
-            self.editNameLabel.place(x=74,y=20)
+            self.editNameLabel.place(x=74,y=150)
             self.editNameEntry=Entry(self.editPerfilLabelFrame, width="30")
-            self.editNameEntry.place(x=130,y=20)
+            self.editNameEntry.place(x=130,y=150)
 
             # [Layout] - Edit Email
             self.editEmailLabel=Label(self.editPerfilLabelFrame, text="Email")
-            self.editEmailLabel.place(x=76,y=70)
+            self.editEmailLabel.place(x=76,y=200)
             self.editEmailEntry=Entry(self.editPerfilLabelFrame, width="30")
-            self.editEmailEntry.place(x=130,y=70)
+            self.editEmailEntry.place(x=130,y=200)
 
             #Verificar se password é igual
             #Verificar se password é igual
@@ -564,19 +616,19 @@ class MainProgram:
 
             # [Layout] - Old password
             self.oldPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Antiga")
-            self.oldPasswordLabel.place(x=20,y=120)
+            self.oldPasswordLabel.place(x=20,y=250)
             self.oldPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
-            self.oldPasswordEntry.place(x=130,y=120)
+            self.oldPasswordEntry.place(x=130,y=250)
 
             # [Layout] - New Password
             self.editPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Nova")
-            self.editPasswordLabel.place(x=26,y=170)
+            self.editPasswordLabel.place(x=26,y=300)
             self.editPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
-            self.editPasswordEntry.place(x=130,y=170)
+            self.editPasswordEntry.place(x=130,y=300)
 
             # [Layout] - Update Button
             self.editProfileButton=ttk.Button(self.editPerfilLabelFrame, text="Atualizar", command=UpdatePerfil)
-            self.editProfileButton.place(x=155,y=230)
+            self.editProfileButton.place(x=155,y=350)
 
             with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
                 for line in f.readlines():

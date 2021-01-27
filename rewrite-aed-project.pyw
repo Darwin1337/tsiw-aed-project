@@ -556,10 +556,11 @@ class MainProgram:
                             if Image.open(self.path).size[0] == Image.open(self.path).size[1]:
                                 if Image.open(self.path).size[0] >= 50:
                                     if os.stat(self.path).st_size <= 5000000:
-                                        print("hey")
-                                        # origin.imgpath = self.path
-                                        # origin.image = ImageTk.PhotoImage(Image.open(origin.imgpath).resize((50, 50)))
-                                        # origin["image"] = origin.image
+                                        pass
+                                        #Alterar imagem na label
+                                        #Alterar imagem na label
+                                        #Alterar imagem na label
+                                        #Alterar imagem na label
                                     else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.master)
                                 else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px", parent = self.master)
                             else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais", parent = self.master)
@@ -856,6 +857,19 @@ class MainProgram:
                                 self.recipeNotificationLikes = Label(self.allNotificationsCard, text = "Likes: " + str(self.recipeNotificationLikes))
                                 self.recipeNotificationLikes.place(x = 90, y = 55)
 
+                                self.recipeNotificationRating = Label(self.allNotificationsCard, text = "Rating: x")
+                                self.recipeNotificationRating.place(x = 150, y = 55)
+
+                                self.averageRatingLabelVarNotifications = 0.0
+                                self.ratingsSumNotifications, self.quantRatingsNotifications = 0, 0
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.ratingsSumNotifications += int(line.split(";")[1])
+                                            self.quantRatingsNotifications += 1
+                                        if self.quantRatingsNotifications > 0: self.averageRatingLabelVarNotifications = float(self.ratingsSumNotifications / self.quantRatingsNotifications)
+                                self.recipeNotificationRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarNotifications)))
+                                
                                 self.recipeNotificationAuthorName = "Erro"
                                 self.recipeNotificationAuthorEmail = "Erro"
                                 with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
@@ -873,7 +887,7 @@ class MainProgram:
                                             self.wasDateFoundInNotifications = True
                                 if self.wasDateFoundInNotifications: self.dateTimeObjectNotification = datetime.datetime.strptime(self.recipeNotificationCreationDate, '%Y-%m-%d %H:%M:%S.%f')
                                 self.allRecipesNotificationsCreator = Label(self.allNotificationsCard, text = "Criado por: " + self.recipeNotificationAuthorName + ", " + str(self.dateTimeObjectNotification.strftime("%d/%m/%Y")))
-                                self.allRecipesNotificationsCreator.place(x = 200, y = 55)
+                                self.allRecipesNotificationsCreator.place(x = 220, y = 55)
 
                                 self.recipeIdNotification = 0
                                 with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
@@ -1343,6 +1357,9 @@ class MainProgram:
 
                             self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
                             self.allRecipesTime.place(x = 90, y = 30)
+                            
+                            
+                            
 
                             self.recipeLikes = 0
                             if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
@@ -1350,6 +1367,21 @@ class MainProgram:
                                 pass
                             self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + str(self.recipeLikes))
                             self.allRecipesLikes.place(x = 90, y = 55)
+
+                            self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: 5.0 de 5.0")
+                            self.allRecipesRating.place(x = 150, y = 55)
+
+                            self.averageRatingLabelVarAllRecipes = 0.0
+                            self.ratingsSumAllRecipes, self.quantRatingsAllRecipes = 0, 0
+                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
+                                for line in f.readlines():
+                                    if line.strip().replace(" ", ""):
+                                        self.ratingsSumAllRecipes += int(line.split(";")[1])
+                                        self.quantRatingsAllRecipes += 1
+                                    if self.quantRatingsAllRecipes > 0: self.averageRatingLabelVarAllRecipes = float(self.ratingsSumAllRecipes / self.quantRatingsAllRecipes)
+                            self.allRecipesRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarAllRecipes)))
+
+
 
                             self.recipeAuthorName = "Erro"
                             self.recipeAuthorEmail = "Erro"
@@ -1368,7 +1400,7 @@ class MainProgram:
                                         self.wasDateFound = True
                             if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeCreationDate, '%Y-%m-%d %H:%M:%S.%f')
                             self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipeAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
-                            self.allRecipesCreator.place(x = 200, y = 55)
+                            self.allRecipesCreator.place(x = 220, y = 55)
 
                             self.recipeId = 0
                             with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:

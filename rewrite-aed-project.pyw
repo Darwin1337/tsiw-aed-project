@@ -44,6 +44,11 @@ from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # MOSTRAR RECEITAS MAIS RECENTES POR DEFEITO
 # MOSTRAR RECEITAS MAIS RECENTES POR DEFEITO
 
+# QUANDO UMA RECEITA FOR REMOVIDA DAR UPDATE A TODAS AS CENAS QUE MOSTRAM RECEITAS
+# QUANDO UMA RECEITA FOR REMOVIDA DAR UPDATE A TODAS AS CENAS QUE MOSTRAM RECEITAS
+# QUANDO UMA RECEITA FOR REMOVIDA DAR UPDATE A TODAS AS CENAS QUE MOSTRAM RECEITAS
+# QUANDO UMA RECEITA FOR REMOVIDA DAR UPDATE A TODAS AS CENAS QUE MOSTRAM RECEITAS
+
 def CreatePath():
     if not os.path.exists(os.getcwd() + "\\data"): os.mkdir(os.getcwd() + "\\data")
     if not os.path.exists(os.getcwd() + "\\data\\user"): os.mkdir(os.getcwd() + "\\data\\user")
@@ -778,7 +783,7 @@ class MainProgram:
             self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
             self.createRecipeButton.place(x = 140, y = 10)
 
-            self.MainProgram_UpdateAllReceiptsPage()
+            self.MainProgram_UpdateAllRecipesPage()
 
     def MainProgram_Notifications(self):
         if not self.hasUserGoneToPage4:
@@ -859,7 +864,6 @@ class MainProgram:
 
                                 self.recipeNotificationRating = Label(self.allNotificationsCard, text = "Rating: x")
                                 self.recipeNotificationRating.place(x = 150, y = 55)
-
                                 self.averageRatingLabelVarNotifications = 0.0
                                 self.ratingsSumNotifications, self.quantRatingsNotifications = 0, 0
                                 with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
@@ -869,7 +873,7 @@ class MainProgram:
                                             self.quantRatingsNotifications += 1
                                         if self.quantRatingsNotifications > 0: self.averageRatingLabelVarNotifications = float(self.ratingsSumNotifications / self.quantRatingsNotifications)
                                 self.recipeNotificationRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarNotifications)))
-                                
+
                                 self.recipeNotificationAuthorName = "Erro"
                                 self.recipeNotificationAuthorEmail = "Erro"
                                 with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
@@ -1018,7 +1022,7 @@ class MainProgram:
                 self.favButton["image"] = self.favImage
                 with open(path + "\\favoritedby.txt", "a", encoding = "utf-8") as f: f.write(EncryptSHA256(self.loggedInUserInformation[1]) + "\n")
 
-        def RateRecipe(path):
+        def RateRecipe():
             self.hasUserRatedThisRecipe = False
             self.recipeRatesList = []
             with open(path + "\\rating.txt", "r", encoding = "utf-8") as f:
@@ -1034,10 +1038,10 @@ class MainProgram:
             with open(path + "\\rating.txt", "w", encoding = "utf-8") as f:
                 for rate in self.recipeRatesList:
                     if rate.replace(" ", ""): f.write(rate + "\n")
-            UpdateRating(path)
-            UpdateUserRating(path)
+            UpdateRating()
+            UpdateUserRating()
 
-        def UpdateRating(path):
+        def UpdateRating():
             self.averageRatingLabelVar = 0.0
             self.ratingsSum, self.quantRatings = 0, 0
             with open(path + "\\rating.txt", "r", encoding = "utf-8") as f:
@@ -1046,9 +1050,9 @@ class MainProgram:
                         self.ratingsSum += int(line.split(";")[1])
                         self.quantRatings += 1
                 if self.quantRatings > 0: self.averageRatingLabelVar = float(self.ratingsSum / self.quantRatings)
-            self.averageRatingLabel["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVar)))
+            self.averageRatingLabel["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVar))) + " de 5.0"
 
-        def UpdateUserRating(path):
+        def UpdateUserRating():
             self.userGivenRating = "Nenhuma"
             with open(path + "\\rating.txt", "r", encoding = "utf-8") as f:
                 for line in f.readlines():
@@ -1056,6 +1060,97 @@ class MainProgram:
                         if line.strip().split(";")[0] == EncryptSHA256(self.loggedInUserInformation[1]):
                             self.userGivenRating = str(float(line.strip().split(";")[1]))
             self.usersRatingLabel["text"] = "A sua avaliação: " + self.userGivenRating
+
+        def AddComment():
+            if str(self.commentArea.get("1.0", END)).strip().replace(" ", ""):
+                if len(str(self.commentArea.get("1.0", END)).strip()) <= 100:
+                    self.wasAnyCommentIdFound = False
+                    if len(os.listdir(path + "\\comments")) > 0:
+                        for i in range(len(os.listdir(path + "\\comments"))):
+                            if os.path.isfile(path + "\\comments\\" + os.listdir(path + "\\comments")[i]):
+                                if "-" in str(os.listdir(path + "\\comments")[i]):
+                                    self.savedCommentId = int(os.listdir(path + "\\comments")[i][:-4].split("-")[-1]) + 1
+                                    self.wasAnyCommentIdFound = True
+                            else:
+                                if i == (len(os.listdir(path + "\\comments")) - 1) and not self.wasAnyCommentIdFound: self.savedCommentId = 1
+                    else: self.savedCommentId = 1
+                    with open(path + "\\comments\\comment-id-" + str(self.savedCommentId) + ".txt", "w", encoding = "utf-8") as f:
+                        f.write(str(self.savedCommentId) + ";" + EncryptSHA256(self.loggedInUserInformation[1]) + ";" + EncryptString(self.loggedInUserInformation[2], "auth") + ";" + EncryptString(str(datetime.datetime.now()), "auth") + ";" + EncryptString(str(self.commentArea.get("1.0", END)).strip(), "auth"))
+                else: messagebox.showerror("Erro", "O comentário não deve exceder os 100 caracteres", parent = self.recipeDetailsWindow)
+            else: messagebox.showerror("Erro", "O comentário deve ter conteúdo", parent = self.recipeDetailsWindow)
+            UpdateComments()
+
+        def UpdateComments():
+            def ShowNoCommentsCard():
+                self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "75", highlightbackground = "black", highlightthickness = 1)
+                self.allComments.pack(pady = 3)
+                self.commentText=Label(self.allComments, wraplength = 310, justify = LEFT, text="Não existem comentários para esta receita")
+                self.commentText.place(x=60,y=25)
+
+            self.ClearWindowWidgets(self.commentsLabelFrame)
+
+            # [Layout] - Recipe interaction - users comments
+            self.commentsFrame = Frame(self.commentsLabelFrame, width = 390, height = 380)
+            self.commentsFrame.place(x = 5, y = 10)
+            self.commentsCanvas = Canvas(self.commentsFrame, width = 355, height = 380)
+            self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
+            self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.commentsCanvas.configure(yscrollcommand = self.commentsCanvasScrollbar.set)
+            self.commentsCanvas.bind('<Configure>', lambda e: self.commentsCanvas.configure(scrollregion = self.commentsCanvas.bbox("all")))
+            self.commentsSecondFrame = Frame(self.commentsCanvas)
+            self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = NW)
+
+            if len(os.listdir(path + "\\comments")) > 0:
+                for i in range(len(os.listdir(path + "\\comments")) -1, -1, -1):
+                    if os.path.isfile(path + "\\comments\\" + os.listdir(path + "\\comments")[i]):
+                        if "-" in str(os.listdir(path + "\\comments")[i]):
+                            with open(path + "\\comments\\" + os.listdir(path + "\\comments")[i], "r", encoding = "utf-8") as f:
+                                for line in f.readlines():
+                                    if line.strip():
+                                        self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "75", highlightbackground = "black", highlightthickness = 1)
+                                        self.allComments.pack(pady = 3)
+
+                                        self.commentedBy = DecryptString(line.strip().split(";")[2], "auth")
+                                        self.creatorComment=Label(self.allComments, text="Autor: " + self.commentedBy)
+                                        self.creatorComment.place(x=3,y=3)
+
+                                        self.commentDate = DecryptString(line.strip().split(";")[3], "auth")
+                                        self.commentDateObject = datetime.datetime.strptime(self.commentDate, '%Y-%m-%d %H:%M:%S.%f')
+                                        self.dateComment=Label(self.allComments, text=str(self.commentDateObject.strftime("%d/%m/%Y %H:%M")))
+                                        self.dateComment.place(x=250,y=3)
+
+                                        separator = ttk.Separator(self.allComments, orient='horizontal')
+                                        separator.place(relx=0, rely=0.37, relwidth=1)
+
+                                        self.commentContent = DecryptString(line.strip().split(";")[4], "auth")
+                                        self.commentText=Label(self.allComments, wraplength = 300, justify = LEFT, text="Mensagem: " + self.commentContent)
+                                        self.commentText.place(x=3,y=30)
+
+                                        if EncryptSHA256(self.loggedInUserInformation[1]) == line.strip().split(";")[1] or self.loggedInUserInformation[3] == "administrator":
+                                            self.removeCommentButton=Button(self.allComments, text="X", width="2", relief="groove", command = partial(RemoveComment, line.strip().split(";")[0]))
+                                            self.removeCommentButton.place(x=320,y=35)
+            else: ShowNoCommentsCard()
+
+            # [Layout] - Recipe interaction - comment textbox
+            self.commentArea = Text(self.commentsLabelFrame, width = "62", height = "5", wrap = WORD, font = ('TkDefaultFont'))
+            self.commentArea.place(x = 5, y = 415)
+            self.addCommentIcon = ttk.Button(self.commentsLabelFrame, text = "Comentar", command = AddComment)
+            self.addCommentIcon.place(x = 150, y = 505)
+
+        def RemoveComment(id):
+            self.wasTheIdFound = False
+            if len(os.listdir(path + "\\comments")) > 0:
+                for i in range(len(os.listdir(path + "\\comments"))):
+                    if os.path.isfile(path + "\\comments\\" + os.listdir(path + "\\comments")[i]):
+                        if "-" in str(os.listdir(path + "\\comments")[i]):
+                            if int(os.listdir(path + "\\comments")[i][:-4].split("-")[-1]) == int(id):
+                                self.wasTheIdFound = True
+                                break
+            else: messagebox.showerror("Erro", "Ocorreu um erro ao remover comentário", parent = self.recipeDetailsWindow)
+            if not self.wasTheIdFound: messagebox.showerror("Erro", "Ocorreu um erro ao remover comentário", parent = self.recipeDetailsWindow)
+            else: os.remove(path + "\\comments\\comment-id-" + str(id) + ".txt")
+            UpdateComments()
 
         if id == 0 or path == "":
             messagebox.showerror("Erro", "Ocorreu um erro ao tentar carregar as informações desta receita", parent = self.master)
@@ -1170,7 +1265,7 @@ class MainProgram:
                 # [Layout] - Recipe statistics - average rating
                 self.averageRatingLabel = Label(self.recipeStatistics, text = "Rating: 0.0")
                 self.averageRatingLabel.place(x = 10, y = 5)
-                UpdateRating(path)
+                UpdateRating()
 
                 # [Layout] - Recipe statistics - likes
                 self.likesLabel = Label(self.recipeStatistics, text = "Likes: 0")
@@ -1242,47 +1337,16 @@ class MainProgram:
                 self.ratingLabel.place(x = 200 , y = 10)
                 self.ratingSpinBox = Spinbox(self.userInteractions, from_ = 1, to = 5, width = 2)
                 self.ratingSpinBox.place(x = 250 , y = 11)
-                self.ratingButton = ttk.Button(self.userInteractions, text = "Avaliar", command = partial(RateRecipe, path))
+                self.ratingButton = ttk.Button(self.userInteractions, text = "Avaliar", command = RateRecipe)
                 self.ratingButton.place(x = 285 , y = 8)
                 self.usersRatingLabel = Label(self.userInteractions, text = "A sua avaliação: Nenhuma")
                 self.usersRatingLabel.place(x = 200, y = 40)
-                UpdateUserRating(path)
+                UpdateUserRating()
 
                 # [Layout] - Recipe interaction - users comments fieldset
                 self.commentsLabelFrame = LabelFrame(self.recipeDetailsWindow, width = "390", height = "560", text = "Comentários")
                 self.commentsLabelFrame.place(x = 440, y = 10)
-
-                # [Layout] - Recipe interaction - users comments
-                self.commentsFrame = Frame(self.commentsLabelFrame, width = 390, height = 380)
-                self.commentsFrame.place(x = 5, y = 10)
-                self.commentsCanvas = Canvas(self.commentsFrame, width = 355, height = 380)
-                self.commentsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-                self.commentsCanvasScrollbar = ttk.Scrollbar(self.commentsFrame, orient = VERTICAL, command = self.commentsCanvas.yview)
-                self.commentsCanvasScrollbar.pack(side = RIGHT, fill = Y)
-                self.commentsCanvas.configure(yscrollcommand = self.commentsCanvasScrollbar.set)
-                self.commentsCanvas.bind('<Configure>', lambda e: self.commentsCanvas.configure(scrollregion = self.commentsCanvas.bbox("all")))
-                self.commentsSecondFrame = Frame(self.commentsCanvas)
-                self.commentsCanvas.create_window((0, 0), window = self.commentsSecondFrame, anchor = NW)
-
-                for i in range(5):
-                    self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "75", highlightbackground = "black", highlightthickness = 1)
-                    self.allComments.pack(pady = 3)
-                    self.creatorComment=Label(self.allComments, text="Comentado por: Diogo Borges")
-                    self.creatorComment.place(x=3,y=3)
-                    self.dateComment=Label(self.allComments, text="26/01/2021 23:43h")
-                    self.dateComment.place(x=250,y=3)
-                    separator = ttk.Separator(self.allComments, orient='horizontal')
-                    separator.place(relx=0, rely=0.37, relwidth=1)
-                    self.commentText=Label(self.allComments, wraplength = 310, justify = LEFT, text="asdasdasdasdasdasdasdasdasdasdasdasdasdadasdasdasasdasdasdasdasdasdasdadasdasd")
-                    self.commentText.place(x=3,y=30)
-                    self.removeCommentButton=Button(self.allComments, text="X", width="2", relief="groove")
-                    self.removeCommentButton.place(x=320,y=35)
-
-                # [Layout] - Recipe interaction - comment textbox
-                self.commentArea = Text(self.commentsLabelFrame, width = "62", height = "5", wrap = WORD, font = ('TkDefaultFont'))
-                self.commentArea.place(x = 5, y = 415)
-                self.addCommentIcon = ttk.Button(self.commentsLabelFrame, text = "Comentar")
-                self.addCommentIcon.place(x = 150, y = 505)
+                UpdateComments()
             except Exception as err:
                 print("Error:\n" + str(err) + "\n")
                 print("Traceback:")
@@ -1290,7 +1354,7 @@ class MainProgram:
                 # messagebox.showerror("Erro", "Ocorreu um erro i nesperado\nO programa vai fechar", parent = self.master)
                 # os._exit(0)
 
-    def MainProgram_UpdateAllReceiptsPage(self):
+    def MainProgram_UpdateAllRecipesPage(self):
         # [Layout] - Recipes frame
         try:
             self.recipesFrame.destroy()
@@ -1357,9 +1421,6 @@ class MainProgram:
 
                             self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
                             self.allRecipesTime.place(x = 90, y = 30)
-                            
-                            
-                            
 
                             self.recipeLikes = 0
                             if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
@@ -1380,8 +1441,6 @@ class MainProgram:
                                         self.quantRatingsAllRecipes += 1
                                     if self.quantRatingsAllRecipes > 0: self.averageRatingLabelVarAllRecipes = float(self.ratingsSumAllRecipes / self.quantRatingsAllRecipes)
                             self.allRecipesRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarAllRecipes)))
-
-
 
                             self.recipeAuthorName = "Erro"
                             self.recipeAuthorEmail = "Erro"
@@ -2013,7 +2072,7 @@ class Recipe:
                                                                 messagebox.showinfo("Sucesso", "A receita foi criada com sucesso", parent = self.master)
                                                                 self.master.destroy()
                                                                 app.master.update()
-                                                                app.MainProgram_UpdateAllReceiptsPage()
+                                                                app.MainProgram_UpdateAllRecipesPage()
                                                         else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.master)
                                                 else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 1250 caracteres", parent = self.master)
                                             else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)

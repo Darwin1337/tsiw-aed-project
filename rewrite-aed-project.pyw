@@ -162,6 +162,7 @@ class MainProgram:
             if a == 0: self.MainProgram_EditProfile()
             if a == 1: self.MainProgram_UsersRecipesPage()
             if a == 2: self.MainProgram_AllRecipesPage()
+            if a == 4: self.MainProgram_Notifications()
 
         def UpdateFiltersList():
             self.globalCategoriesList = []
@@ -193,8 +194,11 @@ class MainProgram:
                     for i in range(self.categoriesListbox.size()):
                         f.write(self.categoriesListbox.get(i).strip()+"\n")
                 UpdateFiltersList()
-                self.searchByCategoryDropdown["value"] = self.filtersCategoriesList
-                self.usersRecipesSearchByCategoryDropdown["value"] = self.filtersCategoriesList
+                try:
+                    self.searchByCategoryDropdown["value"] = self.filtersCategoriesList
+                    self.usersRecipesSearchByCategoryDropdown["value"] = self.filtersCategoriesList
+                except:
+                    pass
                 messagebox.showinfo("Sucesso", "As alterações foram guardadas", parent = self.adminCatWindow)
 
             def AddCategoryAdmin():
@@ -511,13 +515,14 @@ class MainProgram:
         self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
-        self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500, bg = "yellow")
+        self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500)
         self.tabControl.add(self.tabEditProfile)
         self.tabControl.add(self.tabUsersRecipes)
         self.tabControl.add(self.tabAllRecipes)
         self.tabControl.add(self.tabUsersFavourite)
         self.tabControl.add(self.tabUsersNotifications)
         self.tabControl.select(4)
+        self.MainProgram_Notifications()
         self.tabControl.place(x = 200, y = -23)
 
     def MainProgram_EditProfile(self):
@@ -964,6 +969,14 @@ class MainProgram:
                 for i in range(5):
                     self.allComments = Frame(self.commentsSecondFrame, width = "355", height = "75", highlightbackground = "black", highlightthickness = 1)
                     self.allComments.pack(pady = 3)
+                    self.creatorComment=Label(self.allComments, text="Comentado por: Diogo Borges")
+                    self.creatorComment.place(x=3,y=3)
+                    self.dateComment=Label(self.allComments, text="26/01/2021 23:43h")
+                    self.dateComment.place(x=250,y=3)
+                    separator = ttk.Separator(self.allComments, orient='horizontal') 
+                    separator.place(relx=0, rely=0.37, relwidth=1) 
+                    self.commentText=Label(self.allComments, wraplength = 330, justify = LEFT, text="asdasdasdasdasdasdasdasdasdasdasdasdasdadasdasdasasdasdasdasdasdasdasdadasdasd")
+                    self.commentText.place(x=3,y=30)
 
                 # [Layout] - Recipe interaction - comment textbox
                 self.commentArea = Text(self.commentsLabelFrame, width = "62", height = "5", wrap = WORD, font = ('TkDefaultFont'))
@@ -1005,87 +1018,280 @@ class MainProgram:
 
         self.shouldTheNoRecipesCardBeDisplayed = False
         self.recipeFound = False
-        if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-            for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
-                if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                    if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                        if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
-                            self.recipeFound = True
+        if self.loggedInUserInformation[3] == "administrator":
+            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                                self.recipeFound = True
 
-                            self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                            self.allRecipesCard.pack(pady = 3)
+                                self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                                self.allRecipesCard.pack(pady = 3)
 
-                            self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
-                            self.allRecipesPictureCanvas.place(x = 10, y = 5)
-                            if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
-                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
-                            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
-                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
-                            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
-                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
-                            else:
-                                self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-                            self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipesPictureCanvas.imgpath).resize((65, 65)))
-                            self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
+                                self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
+                                self.allRecipesPictureCanvas.place(x = 10, y = 5)
+                                if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+                                else:
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                                self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipesPictureCanvas.imgpath).resize((65, 65)))
+                                self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
 
-                            self.recipeTitle = ""
-                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
-                                for line in f.readlines():
-                                    if line.strip().replace(" ", ""):
-                                        self.recipeTitle = DecryptString(line, "auth")
-                            self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipeTitle)
-                            self.allRecipesName.place(x = 90, y = 5)
+                                self.recipeTitle = ""
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeTitle = DecryptString(line, "auth")
+                                self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipeTitle)
+                                self.allRecipesName.place(x = 90, y = 5)
 
-                            self.recipeTimeToCook = "0:00h"
-                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
-                                for line in f.readlines():
-                                    if line.strip().replace(" ", ""):
-                                        self.recipeTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
+                                self.recipeTimeToCook = "0:00h"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
 
-                            self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
-                            self.allRecipesTime.place(x = 90, y = 30)
+                                self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
+                                self.allRecipesTime.place(x = 90, y = 30)
 
-                            self.recipeLikes = 0
-                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
-                                # Continuar para ver os likes
-                                pass
-                            self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + str(self.recipeLikes))
-                            self.allRecipesLikes.place(x = 90, y = 55)
+                                self.recipeLikes = 0
+                                if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
+                                    # Continuar para ver os likes
+                                    pass
+                                self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + str(self.recipeLikes))
+                                self.allRecipesLikes.place(x = 90, y = 55)
 
-                            self.recipeAuthorName = "Erro"
-                            self.recipeAuthorEmail = "Erro"
-                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
-                                for line in f.readlines():
-                                    if line.strip().replace(" ", ""):
-                                        self.recipeAuthorEmail = DecryptString(line.split(";")[0], "auth")
-                                        self.recipeAuthorName = DecryptString(line.split(";")[1], "auth")
+                                self.recipeAuthorName = "Erro"
+                                self.recipeAuthorEmail = "Erro"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeAuthorEmail = DecryptString(line.split(";")[0], "auth")
+                                            self.recipeAuthorName = DecryptString(line.split(";")[1], "auth")
 
-                            self.recipeCreationDate = "01/01/2021"
-                            self.wasDateFound = False
-                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
-                                for line in f.readlines():
-                                    if line.strip().replace(" ", ""):
-                                        self.recipeCreationDate = DecryptString(line, "auth")
-                                        self.wasDateFound = True
-                            if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeCreationDate, '%Y-%m-%d %H:%M:%S.%f')
-                            self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipeAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
-                            self.allRecipesCreator.place(x = 200, y = 55)
+                                self.recipeCreationDate = "01/01/2021"
+                                self.wasDateFound = False
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeCreationDate = DecryptString(line, "auth")
+                                            self.wasDateFound = True
+                                if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeCreationDate, '%Y-%m-%d %H:%M:%S.%f')
+                                self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipeAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
+                                self.allRecipesCreator.place(x = 200, y = 55)
 
-                            self.recipeId = 0
-                            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
-                                for line in f.readlines():
-                                    if line.strip().replace(" ", ""):
-                                        self.recipeId = int(line)
+                                self.recipeId = 0
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeId = int(line)
 
-                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
-                            self.allRecipesSeeMore.place(x = 500, y = 27)
-        else: self.shouldTheNoRecipesCardBeDisplayed = True
+                                self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
+                                self.allRecipesSeeMore.place(x = 450, y = 27)
+                                self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
+                                self.allRecipesEdit.place(x = 520, y = 10)
+                                self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
+                                self.allRecipesRemove.place(x = 520, y = 39)
+            else: self.shouldTheNoRecipesCardBeDisplayed = True
 
-        if self.shouldTheNoRecipesCardBeDisplayed or not self.recipeFound:
-            self.noRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-            self.noRecipesFoundCard.pack(pady = 3)
-            self.noRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
-            self.noRecipesLabel.place(x = 200, y = 35)
+            if self.shouldTheNoRecipesCardBeDisplayed or not self.recipeFound:
+                self.noRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.noRecipesFoundCard.pack(pady = 3)
+                self.noRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
+                self.noRecipesLabel.place(x = 200, y = 35)
+        else:
+            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                                self.recipeFound = True
+
+                                self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                                self.allRecipesCard.pack(pady = 3)
+
+                                self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
+                                self.allRecipesPictureCanvas.place(x = 10, y = 5)
+                                if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+                                else:
+                                    self.allRecipesPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                                self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allRecipesPictureCanvas.imgpath).resize((65, 65)))
+                                self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
+
+                                self.recipeTitle = ""
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeTitle = DecryptString(line, "auth")
+                                self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipeTitle)
+                                self.allRecipesName.place(x = 90, y = 5)
+
+                                self.recipeTimeToCook = "0:00h"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
+
+                                self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipeTimeToCook)
+                                self.allRecipesTime.place(x = 90, y = 30)
+
+                                self.recipeLikes = 0
+                                if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
+                                    # Continuar para ver os likes
+                                    pass
+                                self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + str(self.recipeLikes))
+                                self.allRecipesLikes.place(x = 90, y = 55)
+
+                                self.recipeAuthorName = "Erro"
+                                self.recipeAuthorEmail = "Erro"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeAuthorEmail = DecryptString(line.split(";")[0], "auth")
+                                            self.recipeAuthorName = DecryptString(line.split(";")[1], "auth")
+
+                                self.recipeCreationDate = "01/01/2021"
+                                self.wasDateFound = False
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeCreationDate = DecryptString(line, "auth")
+                                            self.wasDateFound = True
+                                if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeCreationDate, '%Y-%m-%d %H:%M:%S.%f')
+                                self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipeAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
+                                self.allRecipesCreator.place(x = 200, y = 55)
+
+                                self.recipeId = 0
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeId = int(line)
+
+                                self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
+                                self.allRecipesSeeMore.place(x = 500, y = 27)
+            else: self.shouldTheNoRecipesCardBeDisplayed = True
+
+            if self.shouldTheNoRecipesCardBeDisplayed or not self.recipeFound:
+                self.noRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.noRecipesFoundCard.pack(pady = 3)
+                self.noRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
+                self.noRecipesLabel.place(x = 200, y = 35)
+
+    def MainProgram_Notifications(self):
+        if not self.hasUserGoneToPage4:
+            self.hasUserGoneToPage4 = True
+            
+            # [Layout] - Notifications Title
+            self.notificationsTitle=Label(self.tabUsersNotifications, text="Notificações " + "(4)", font=("Helvetica 15 bold"))
+            self.notificationsTitle.pack(side = TOP, anchor=CENTER, pady=20)
+
+            # [Layout] - Recipes fieldset
+            self.notificationsPanel = LabelFrame(self.tabUsersNotifications, text = "Notificações", width = "640", height = "345", bd = "2")
+            self.notificationsPanel.pack(anchor=CENTER)
+
+            self.notificationsFrame = Frame(self.notificationsPanel, width = 625, height = 280)
+            self.notificationsFrame.place(x = 5, y = 10)
+            self.notificationsCanvas = Canvas(self.notificationsFrame, width = 605, height=300)
+            self.notificationsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.notificationsCanvasScrollbar = ttk.Scrollbar(self.notificationsFrame, orient = VERTICAL, command = self.notificationsCanvas.yview)
+            self.notificationsCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.notificationsCanvas.configure(yscrollcommand = self.notificationsCanvasScrollbar.set)
+            self.notificationsCanvas.bind('<Configure>', lambda e: self.notificationsCanvas.configure(scrollregion = self.notificationsCanvas.bbox("all")))
+            self.notificationsSecondFrame = Frame(self.notificationsCanvas)
+            self.notificationsCanvas.create_window((0, 0), window = self.notificationsSecondFrame, anchor = NW)
+
+            CreatePath()
+            if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+                os._exit(0)
+
+            self.shouldTheNoRecipesCardBeDisplayed = False
+            self.recipeFound = False
+            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                                self.recipeFound = True
+
+                                self.allNotificationsCard = Frame(self.notificationsSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                                self.allNotificationsCard.pack(pady = 3)
+
+                                self.allNotificationsPictureCanvas = Canvas(self.allNotificationsCard, width = "65", height = "65")
+                                self.allNotificationsPictureCanvas.place(x = 10, y = 5)
+                                if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
+                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
+                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
+                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+                                else:
+                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                                self.allNotificationsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allNotificationsPictureCanvas.imgpath).resize((65, 65)))
+                                self.allNotificationsPictureCanvas.create_image(32.5, 32.5, image = self.allNotificationsPictureCanvas.image, anchor = CENTER)
+
+                                self.notificationTitle = ""
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.notificationTitle = DecryptString(line, "auth")
+                                self.allnotificationsName = Label(self.allNotificationsCard, text = "Título: " + self.notificationTitle)
+                                self.allnotificationsName.place(x = 90, y = 5)
+
+                                self.recipeNotificationTimeToCook = "0:00h"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeNotificationTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
+
+                                self.allRecipesNotificationTime = Label(self.allNotificationsCard, text = "Tempo de confeção: " + self.recipeNotificationTimeToCook)
+                                self.allRecipesNotificationTime.place(x = 90, y = 30)
+
+                                self.recipeNotificationLikes = 0
+                                if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
+                                    # Continuar para ver os likes
+                                    pass
+                                self.recipeNotificationLikes = Label(self.allNotificationsCard, text = "Likes: " + str(self.recipeNotificationLikes))
+                                self.recipeNotificationLikes.place(x = 90, y = 55)
+
+                                self.recipeNotificationAuthorName = "Erro"
+                                self.recipeNotificationAuthorEmail = "Erro"
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeNotificationAuthorEmail = DecryptString(line.split(";")[0], "auth")
+                                            self.recipeNotificationAuthorName = DecryptString(line.split(";")[1], "auth")
+
+                                self.recipeNotificationCreationDate = "01/01/2021"
+                                self.wasDateFound = False
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeNotificationCreationDate = DecryptString(line, "auth")
+                                            self.wasDateFound = True
+                                if self.wasDateFound: self.dateTimeObject = datetime.datetime.strptime(self.recipeNotificationCreationDate, '%Y-%m-%d %H:%M:%S.%f')
+                                self.allRecipesNotificationsCreator = Label(self.allNotificationsCard, text = "Criado por: " + self.recipeNotificationAuthorName + ", " + str(self.dateTimeObject.strftime("%d/%m/%Y")))
+                                self.allRecipesNotificationsCreator.place(x = 200, y = 55)
+
+                                self.recipeId = 0
+                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                                    for line in f.readlines():
+                                        if line.strip().replace(" ", ""):
+                                            self.recipeId = int(line)
+
+                                self.allRecipesSeeMore = Button(self.allNotificationsCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeId, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
+                                self.allRecipesSeeMore.place(x = 500, y = 27)
+            else: self.shouldTheNoRecipesCardBeDisplayed = True
 
 class Login:
     def __init__(self, master):

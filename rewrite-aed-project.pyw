@@ -11,7 +11,6 @@ from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
-#Commit!!!!
 # pip install cryptocode
 # pip install PySide2
 # pip install Pillow
@@ -21,9 +20,6 @@ from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # print("Traceback:")
 # traceback.print_exc()
 
-# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
-# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
-# ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
@@ -538,7 +534,7 @@ class MainProgram:
         self.tabControl.place(x = 200, y = -23)
 
     def MainProgram_EditProfile(self):
-        if not self.hasUserGoneToPage0:
+         if not self.hasUserGoneToPage0:
             self.hasUserGoneToPage0 = True
 
             def UpdatePerfil():
@@ -978,14 +974,35 @@ class MainProgram:
                         self.currentRecipeLikes = line.strip()
             self.likesLabel["text"] = "Likes: " + str(self.currentRecipeLikes)
 
+        def VerifyUserFavorite():
+            self.hasUserFavoritedThisRecipe = False
+            with open(path + "\\favoritedby.txt", "r", encoding = "utf-8") as f:
+                for line in f.readlines():
+                    if line.strip():
+                        if line.strip() == EncryptSHA256(self.loggedInUserInformation[1]):
+                            self.hasUserFavoritedThisRecipe = True
+            return self.hasUserFavoritedThisRecipe
+
         def FavoriteRecipe():
-            if self.favButton.currentImg == "favIcon2.png":
-                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((20, 20)))
-                self.favButton.currentImg = "favIcon.png"
-            else:
+            if VerifyUserFavorite():
                 self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((20, 20)))
                 self.favButton.currentImg = "favIcon2.png"
-            self.favButton["image"] = self.favImage
+                self.favButton["image"] = self.favImage
+                self.usersFavoritedList = []
+                with open(path + "\\favoritedby.txt", "r", encoding = "utf-8") as f:
+                    for line in f.readlines():
+                        if line.strip():
+                            if line.strip() != EncryptSHA256(self.loggedInUserInformation[1]):
+                                self.usersFavoritedList.append(line.strip())
+
+                with open(path + "\\favoritedby.txt", "w", encoding = "utf-8") as f:
+                    for favorite in self.usersFavoritedList:
+                        if favorite.replace(" ", ""): f.write(favorite + "\n")
+            else:
+                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((20, 20)))
+                self.favButton.currentImg = "favIcon.png"
+                self.favButton["image"] = self.favImage
+                with open(path + "\\favoritedby.txt", "a", encoding = "utf-8") as f: f.write(EncryptSHA256(self.loggedInUserInformation[1]) + "\n")
 
         def RateRecipe(path):
             self.hasUserRatedThisRecipe = False
@@ -1200,7 +1217,8 @@ class MainProgram:
                 # [Layout] - Recipe interaction - favorites
                 self.userFav = Label(self.userInteractions, text = "Adicionar aos favoritos:")
                 self.userFav.place(x = 10, y = 40)
-                self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((20, 20), Image.ANTIALIAS))
+                if VerifyUserFavorite(): self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon.png").resize((20, 20), Image.ANTIALIAS))
+                else: self.favImage = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\favIcon2.png").resize((20, 20), Image.ANTIALIAS))
                 self.favButton = Button(self.userInteractions, image = self.favImage, compound = CENTER, relief = "flat", width = "20", height = "20", highlightthickness = 0, bd = 0, command = FavoriteRecipe)
                 self.favButton.currentImg = "favIcon2.png"
                 self.favButton.place(x = 150, y = 40)
@@ -1253,7 +1271,7 @@ class MainProgram:
                 print("Error:\n" + str(err) + "\n")
                 print("Traceback:")
                 traceback.print_exc()
-                # messagebox.showerror("Erro", "Ocorreu um erro inesperado\nO programa vai fechar", parent = self.master)
+                # messagebox.showerror("Erro", "Ocorreu um erro i nesperado\nO programa vai fechar", parent = self.master)
                 # os._exit(0)
 
     def MainProgram_UpdateAllReceiptsPage(self):

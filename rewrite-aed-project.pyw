@@ -11,6 +11,9 @@ from tkinter import messagebox, ttk, filedialog
 from functools import partial # Usado para acionar eventos com argumentos customizados
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
+from threading import Thread
+import time
+
 # pip install cryptocode
 # pip install PySide2
 # pip install Pillow
@@ -25,12 +28,6 @@ from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
 # ADICIONAR CUSTOM CLOSE PARA LOGIN E REGISTAR
-
-# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
-# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
-# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
-# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
-# UPDATE FILTERS LIST WHEN ADMIN ADDS ANOTHER (SaveModifications)
 
 # MOSTRAR RECEITAS MAIS RECENTES POR DEFEITO
 # MOSTRAR RECEITAS MAIS RECENTES POR DEFEITO
@@ -420,6 +417,7 @@ class MainProgram:
         self.hasUserGoneToPage2 = False
         self.hasUserGoneToPage3 = False
         self.hasUserGoneToPage4 = False
+        self.shouldRecipesBeLoaded = True
 
         UpdateFiltersList()
 
@@ -533,38 +531,119 @@ class MainProgram:
         self.tabControl.place(x = 200, y = -23)
 
     def MainProgram_EditProfile(self):
-         if not self.hasUserGoneToPage0:
+        def UpdateProfile():
+            self.listUsers=[]
+            self.wasAccountFoundEdit = False
+            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r") as f:
+                for line in f.readlines():
+                    if line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10] == EncryptSHA256(self.loggedInUserInformation[1]):
+                        self.wasAccountFoundEdit = True
+                        self.isEditSaveReady = True
+                        self.wasImageEdited = False
+                        if self.editNameEntry.get().replace(" ", ""):
+                            if self.editNameEntry.get().count(" ") >= 1:
+                                self.isNameAcceptable = True
+                                for i in range(len(self.editNameEntry.get().split(" "))):
+                                    if len(self.editNameEntry.get().split(" ")[i]) < 2: self.isNameAcceptable = False
+                                if self.isNameAcceptable:
+                                    if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(self.editNameEntry.get().replace(" ", "")):
+                                        if len(self.editNameEntry.get()) <= 55:
+                                            self.passWordToSave = line.strip().split(";")[1]
+                                            if self.oldPasswordEntry.get():
+                                                if EncryptSHA256(self.oldPasswordEntry.get()) == line.strip().split(";")[1]:
+                                                    if len(self.editPasswordEntry.get()) >= 8:
+                                                        self.passWordToSave = EncryptSHA256(self.editPasswordEntry.get())
+                                                        try: shutil.copy2(self.profilePictureEdit.imgpath, os.getcwd() + "\\data\\images\\" + line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10][:15] + os.path.splitext(self.profilePictureEdit.imgpath)[1])
+                                                        except: pass
+                                                        self.listUsers.append(line.strip().split(";")[0] + ";" + self.passWordToSave + ";" + EncryptString(" ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" ")))), line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10]))
+                                                        self.loggedInUserInformation[2] = " ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" "))))
+                                                    else:
+                                                        self.isEditSaveReady = False
+                                                        messagebox.showerror("Erro", "A nova palavra-passe escolhida tem de ter 8 ou mais caracteres", parent = self.master)
+                                                else:
+                                                    self.isEditSaveReady = False
+                                                    messagebox.showerror("Erro", "A antiga palavra-passe não está correta", parent = self.master)
+                                            elif self.editPasswordEntry.get():
+                                                if len(self.oldPasswordEntry.get()) >= 8:
+                                                    if EncryptSHA256(self.oldPasswordEntry.get()) == line.strip().split(";")[1]:
+                                                        self.passWordToSave = EncryptSHA256(self.editPasswordEntry.get())
+                                                        try: shutil.copy2(self.profilePictureEdit.imgpath, os.getcwd() + "\\data\\images\\" + line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10][:15] + os.path.splitext(self.profilePictureEdit.imgpath)[1])
+                                                        except: pass
+                                                        self.listUsers.append(line.strip().split(";")[0] + ";" + self.passWordToSave + ";" + EncryptString(" ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" ")))), line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10]))
+                                                        self.loggedInUserInformation[2] = " ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" "))))
+                                                    else:
+                                                        self.isEditSaveReady = False
+                                                        messagebox.showerror("Erro", "A antiga palavra-passe não está correta", parent = self.master)
+                                                else:
+                                                    self.isEditSaveReady = False
+                                                    messagebox.showerror("Erro", "A nova palavra-passe escolhida tem de ter 8 ou mais caracteres", parent = self.master)
+                                            else:
+                                                try: shutil.copy2(self.profilePictureEdit.imgpath, os.getcwd() + "\\data\\images\\" + line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10][:15] + os.path.splitext(self.profilePictureEdit.imgpath)[1])
+                                                except: pass
+                                                self.listUsers.append(line.strip().split(";")[0] + ";" + self.passWordToSave + ";" + EncryptString(" ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" ")))), line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10]))
+                                                self.loggedInUserInformation[2] = " ".join(self.editNameEntry.get().split(" ")[i].capitalize() for i in range(len(self.editNameEntry.get().split(" "))))
+                                        else:
+                                            self.isEditSaveReady = False
+                                            messagebox.showerror("Erro", "O campo de nome não pode exceder os 55 caracteres", parent = self.master)
+                                    else:
+                                        self.isEditSaveReady = False
+                                        messagebox.showerror("Erro", "O campo de nome não pode conter caracteres especiais nem números", parent = self.master)
+                                else:
+                                    self.isEditSaveReady = False
+                                    messagebox.showerror("Erro", "O nome introduzido é inválido", parent = self.master)
+                            else:
+                                self.isEditSaveReady = False
+                                messagebox.showerror("Erro", "Introduza, pelo menos, o primeiro e último nome", parent = self.master)
+                        else:
+                            self.isEditSaveReady = False
+                            messagebox.showerror("Erro", "O nome introduzido é inválido", parent = self.master)
+                    else: self.listUsers.append(line.strip())
+            if not self.wasAccountFoundEdit:
+                messagebox.showerror("Erro", "Ocorreu um erro inesperado\nO programa vai fechar", parent = self.master)
+                os._exit(0)
+
+            if self.isEditSaveReady:
+                with open(os.getcwd() + "\\data\\user\\users_info.txt", "w") as f:
+                    for i in range(len(self.listUsers)):
+                        f.write(self.listUsers[i]+"\n")
+                messagebox.showinfo("Sucesso", "Foram feitas as alterações", parent = self.master)
+                self.updatedDisplayName = self.loggedInUserInformation[2].strip().split(" ")[0] + " " + self.loggedInUserInformation[2].strip().split(" ")[-1]
+                self.usersName["text"] = self.updatedDisplayName
+                self.ClearWindowWidgets(self.tabUsersRecipes)
+                self.ClearWindowWidgets(self.tabAllRecipes)
+                self.ClearWindowWidgets(self.tabUsersFavourite)
+                self.hasUserGoneToPage1, self.hasUserGoneToPage2, self.hasUserGoneToPage3 = False, False, False
+                self.shouldRecipesBeLoaded = True
+                if self.wasImageEdited:
+                    self.profilePicture.imgpath = self.path
+                    self.profilePicture.image = ImageTk.PhotoImage(Image.open(self.profilePicture.imgpath).resize((70, 70)))
+                    self.profilePicture["image"] = self.profilePicture.image
+
+        def ChangeAvaImage(origin):
+            self.imageCheckEdit, self.path = False, filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
+            if self.path:
+                try:
+                    Image.open(self.path).verify()
+                    self.imageCheckEdit = True
+                except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem", parent = self.master)
+                if self.imageCheckEdit:
+                    try:
+                        if Image.open(self.path).size[0] == Image.open(self.path).size[1]:
+                            if Image.open(self.path).size[0] >= 50:
+                                if os.stat(self.path).st_size <= 5000000:
+                                    self.wasImageEdited = True
+                                    origin.imgpath = self.path
+                                    origin.image = ImageTk.PhotoImage(Image.open(origin.imgpath).resize((70, 70)))
+                                    origin["image"] = origin.image
+                                else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.master)
+                            else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px", parent = self.master)
+                        else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais", parent = self.master)
+                    except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema", parent = self.master)
+                    except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
+
+        if not self.hasUserGoneToPage0:
             self.hasUserGoneToPage0 = True
 
-            def UpdatePerfil():
-                pass
-                #Colocar a encryptar e guardar no ficheiro
-                #Colocar a encryptar e guardar no ficheiro
-                #Colocar a encryptar e guardar no ficheiro
-                #Colocar a encryptar e guardar no ficheiro
-
-            def ChangeAvaImage():
-                self.imageCheckEdit, self.path = False, filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
-                if self.path:
-                    try:
-                        Image.open(self.path).verify()
-                        self.imageCheckEdit = True
-                    except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem", parent = self.master)
-                    if self.imageCheckEdit:
-                        try:
-                            if Image.open(self.path).size[0] == Image.open(self.path).size[1]:
-                                if Image.open(self.path).size[0] >= 50:
-                                    if os.stat(self.path).st_size <= 5000000:
-                                        pass
-                                        #Alterar imagem na label
-                                        #Alterar imagem na label
-                                        #Alterar imagem na label
-                                        #Alterar imagem na label
-                                    else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.master)
-                                else: messagebox.showerror("Erro", "A imagem é inferior a 50x50px", parent = self.master)
-                            else: messagebox.showerror("Erro", "A largura e altura da imagem não são iguais", parent = self.master)
-                        except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema", parent = self.master)
-                        except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.master)
             # [Layout] - Title
             self.titlePerfilLabel=Label(self.tabEditProfile, text="Editar Perfil")
             self.titlePerfilLabel.pack(side=TOP, pady="20")
@@ -580,6 +659,7 @@ class MainProgram:
             for path in self.possiblePaths:
                 if os.path.exists(os.getcwd() + "\\data\\images\\" + path):
                     self.profilePictureEdit = Label(self.editPerfilLabelFrame)
+                    self.profilePictureEdit.imgpath = os.getcwd() + "\\data\\images\\" + path
                     self.profilePictureEdit.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\" + path).resize((70, 70)))
                     self.profilePictureEdit["image"] = self.profilePictureEdit.image
                     self.profilePictureEdit.place(x = 158, y = 10)
@@ -589,6 +669,7 @@ class MainProgram:
                 if os.path.exists(os.getcwd() + "\\data\\images\\default.jpg"):
                     if MD5Checksum(1) == "28c17e68aa44166d1c8e716bd535676a":
                         self.profilePictureEdit = Label(self.editPerfilLabelFrame)
+                        self.profilePictureEdit.imgpath = os.getcwd() + "\\data\\images\\default.jpg"
                         self.profilePictureEdit.image = ImageTk.PhotoImage(Image.open(os.getcwd() + "\\data\\images\\default.jpg").resize((70, 70)))
                         self.profilePictureEdit["image"] = self.profilePictureEdit.image
                         self.profilePictureEdit.place(x = 158, y = 10)
@@ -600,7 +681,7 @@ class MainProgram:
                     os._exit(0)
 
             # [Layout] - Button edit avatar
-            self.editAvaButton=ttk.Button(self.editPerfilLabelFrame, text="Alterar imagem", command=ChangeAvaImage)
+            self.editAvaButton=ttk.Button(self.editPerfilLabelFrame, text="Alterar imagem", command=partial(ChangeAvaImage, self.profilePictureEdit))
             self.editAvaButton.place(x=150 ,y=100)
             self.editAvaLabel=Label(self.editPerfilLabelFrame, text = ".jpg .jpeg ou .png", wraplength = 140, justify = LEFT, font=(None, 8))
             self.editAvaLabel.place(x=250 , y=105)
@@ -609,40 +690,32 @@ class MainProgram:
             self.editNameLabel=Label(self.editPerfilLabelFrame, text="Nome")
             self.editNameLabel.place(x=74,y=150)
             self.editNameEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editNameEntry.insert(END, self.loggedInUserInformation[2])
             self.editNameEntry.place(x=130,y=150)
 
             # [Layout] - Edit Email
-            self.editEmailLabel=Label(self.editPerfilLabelFrame, text="Email")
+            self.editEmailLabel=Label(self.editPerfilLabelFrame, text="Email", state = DISABLED)
             self.editEmailLabel.place(x=76,y=200)
             self.editEmailEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editEmailEntry.insert(END, self.loggedInUserInformation[1])
+            self.editEmailEntry["state"] = DISABLED
             self.editEmailEntry.place(x=130,y=200)
-
-            #Verificar se password é igual
-            #Verificar se password é igual
-            #Verificar se password é igual
-            #Verificar se password é igual
 
             # [Layout] - Old password
             self.oldPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Antiga")
             self.oldPasswordLabel.place(x=20,y=250)
-            self.oldPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.oldPasswordEntry=Entry(self.editPerfilLabelFrame, width="30", show="*")
             self.oldPasswordEntry.place(x=130,y=250)
 
             # [Layout] - New Password
             self.editPasswordLabel=Label(self.editPerfilLabelFrame, text="Password Nova")
             self.editPasswordLabel.place(x=26,y=300)
-            self.editPasswordEntry=Entry(self.editPerfilLabelFrame, width="30")
+            self.editPasswordEntry=Entry(self.editPerfilLabelFrame, width="30", show="*")
             self.editPasswordEntry.place(x=130,y=300)
 
             # [Layout] - Update Button
-            self.editProfileButton=ttk.Button(self.editPerfilLabelFrame, text="Atualizar", command=UpdatePerfil)
+            self.editProfileButton=ttk.Button(self.editPerfilLabelFrame, text="Atualizar", command=UpdateProfile)
             self.editProfileButton.place(x=155,y=350)
-
-            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r", encoding="utf-8") as f:
-                for line in f.readlines():
-                    if line.split(";")[0][:-10]==EncryptSHA256(self.loggedInUserInformation[1]):
-                        self.editNameEntry.insert("end", self.loggedInUserInformation[2])
-                        self.editEmailEntry.insert("end", self.loggedInUserInformation[1])
 
     def MainProgram_UsersRecipesPage(self):
         if not self.hasUserGoneToPage1:
@@ -777,131 +850,145 @@ class MainProgram:
             self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
             self.createRecipeButton.place(x = 140, y = 10)
 
-            self.MainProgram_ShowRecipeCards("AllRecipes")
+            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
+            self.recipesFrame.place(x = 5, y = 45)
+            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
+            self.recipesCanvas.bind("<Configure>", partial(self.MainProgram_GlobalFunctions, "ResetScrollRegion", self.recipesCanvas))
+            self.recipesSecondFrame = Frame(self.recipesCanvas)
+            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
+
+            Thread(target=self.MainProgram_ShowRecipeCards, args=("AllRecipes",)).start()
+            #self.MainProgram_ShowRecipeCards("AllRecipes")
 
     def MainProgram_Notifications(self):
-        if not self.hasUserGoneToPage4:
-            self.hasUserGoneToPage4 = True
-
-            # [Layout] - Notifications Title
-            self.notificationsTitle=Label(self.tabUsersNotifications, text="Notificações " + "(4)", font=("Helvetica 15 bold"))
-            self.notificationsTitle.pack(side = TOP, anchor=CENTER, pady=20)
-
-            # [Layout] - Recipes fieldset
-            self.notificationsPanel = LabelFrame(self.tabUsersNotifications, text = "Notificações", width = "640", height = "345", bd = "2")
-            self.notificationsPanel.pack(anchor=CENTER)
-
-            self.notificationsFrame = Frame(self.notificationsPanel, width = 625, height = 280)
-            self.notificationsFrame.place(x = 5, y = 10)
-            self.notificationsCanvas = Canvas(self.notificationsFrame, width = 605, height=300)
-            self.notificationsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            self.notificationsCanvasScrollbar = ttk.Scrollbar(self.notificationsFrame, orient = VERTICAL, command = self.notificationsCanvas.yview)
-            self.notificationsCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            self.notificationsCanvas.configure(yscrollcommand = self.notificationsCanvasScrollbar.set)
-            self.notificationsCanvas.bind('<Configure>', lambda e: self.notificationsCanvas.configure(scrollregion = self.notificationsCanvas.bbox("all")))
-            self.notificationsSecondFrame = Frame(self.notificationsCanvas)
-            self.notificationsCanvas.create_window((0, 0), window = self.notificationsSecondFrame, anchor = NW)
-
-            CreatePath()
-            if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
-                os._exit(0)
-
-            self.shouldTheNoNotificationsCardBeDisplayed = False
-            self.recipeFoundInNotifications = False
-            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
-                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
-                                self.recipeFoundInNotifications = True
-
-                                self.allNotificationsCard = Frame(self.notificationsSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                                self.allNotificationsCard.pack(pady = 3)
-
-                                self.allNotificationsPictureCanvas = Canvas(self.allNotificationsCard, width = "65", height = "65")
-                                self.allNotificationsPictureCanvas.place(x = 10, y = 5)
-                                if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
-                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
-                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
-                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
-                                elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
-                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
-                                else:
-                                    self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-                                self.allNotificationsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allNotificationsPictureCanvas.imgpath).resize((65, 65)))
-                                self.allNotificationsPictureCanvas.create_image(32.5, 32.5, image = self.allNotificationsPictureCanvas.image, anchor = CENTER)
-
-                                self.notificationTitle = ""
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.notificationTitle = DecryptString(line, "auth")
-                                self.allnotificationsName = Label(self.allNotificationsCard, text = "Título: " + self.notificationTitle)
-                                self.allnotificationsName.place(x = 90, y = 5)
-
-                                self.recipeNotificationTimeToCook = "0:00h"
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.recipeNotificationTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
-
-                                self.allRecipesNotificationTime = Label(self.allNotificationsCard, text = "Tempo de confeção: " + self.recipeNotificationTimeToCook)
-                                self.allRecipesNotificationTime.place(x = 90, y = 30)
-
-                                self.recipeNotificationLikes = 0
-                                if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
-                                    # Continuar para ver os likes
-                                    pass
-                                self.recipeNotificationLikes = Label(self.allNotificationsCard, text = "Likes: " + str(self.recipeNotificationLikes))
-                                self.recipeNotificationLikes.place(x = 90, y = 55)
-
-                                self.recipeNotificationRating = Label(self.allNotificationsCard, text = "Rating: x")
-                                self.recipeNotificationRating.place(x = 150, y = 55)
-                                self.averageRatingLabelVarNotifications = 0.0
-                                self.ratingsSumNotifications, self.quantRatingsNotifications = 0, 0
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.ratingsSumNotifications += int(line.split(";")[1])
-                                            self.quantRatingsNotifications += 1
-                                        if self.quantRatingsNotifications > 0: self.averageRatingLabelVarNotifications = float(self.ratingsSumNotifications / self.quantRatingsNotifications)
-                                self.recipeNotificationRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarNotifications)))
-
-                                self.recipeNotificationAuthorName = "Erro"
-                                self.recipeNotificationAuthorEmail = "Erro"
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.recipeNotificationAuthorEmail = DecryptString(line.split(";")[0], "auth")
-                                            self.recipeNotificationAuthorName = DecryptString(line.split(";")[1], "auth")
-
-                                self.recipeNotificationCreationDate = "01/01/2021"
-                                self.wasDateFoundInNotifications = False
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.recipeNotificationCreationDate = DecryptString(line, "auth")
-                                            self.wasDateFoundInNotifications = True
-                                if self.wasDateFoundInNotifications: self.dateTimeObjectNotification = datetime.datetime.strptime(self.recipeNotificationCreationDate, '%Y-%m-%d %H:%M:%S.%f')
-                                self.allRecipesNotificationsCreator = Label(self.allNotificationsCard, text = "Criado por: " + self.recipeNotificationAuthorName + ", " + str(self.dateTimeObjectNotification.strftime("%d/%m/%Y")))
-                                self.allRecipesNotificationsCreator.place(x = 220, y = 55)
-
-                                self.recipeIdNotification = 0
-                                with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
-                                    for line in f.readlines():
-                                        if line.strip().replace(" ", ""):
-                                            self.recipeIdNotification = int(line)
-
-                                self.notificationRecipesSeeMore = Button(self.allNotificationsCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeIdNotification, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]))
-                                self.notificationRecipesSeeMore.place(x = 500, y = 27)
-            else: self.shouldTheNoNotificationsCardBeDisplayed = True
-
-            if self.shouldTheNoNotificationsCardBeDisplayed or not self.recipeFoundInNotifications:
-                self.noRecipesFoundCardNotification = Frame(self.notificationsSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                self.noRecipesFoundCardNotification.pack(pady = 3)
-                self.noRecipesNotification = Label(self.notificationsSecondFrame, text = "Não foram encontradas receitas")
-                self.noRecipesNotification.place(x = 200, y = 35)
+        # if not self.hasUserGoneToPage4:
+        #     self.hasUserGoneToPage4 = True
+        #
+        #     # [Layout] - Notifications Title
+        #     self.notificationsTitle=Label(self.tabUsersNotifications, text="Notificações " + "(4)", font=("Helvetica 15 bold"))
+        #     self.notificationsTitle.pack(side = TOP, anchor=CENTER, pady=20)
+        #
+        #     # [Layout] - Recipes fieldset
+        #     self.notificationsPanel = LabelFrame(self.tabUsersNotifications, text = "Notificações", width = "640", height = "345", bd = "2")
+        #     self.notificationsPanel.pack(anchor=CENTER)
+        #
+        #     self.notificationsFrame = Frame(self.notificationsPanel, width = 625, height = 280)
+        #     self.notificationsFrame.place(x = 5, y = 10)
+        #     self.notificationsCanvas = Canvas(self.notificationsFrame, width = 605, height=300)
+        #     self.notificationsCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+        #     self.notificationsCanvasScrollbar = ttk.Scrollbar(self.notificationsFrame, orient = VERTICAL, command = self.notificationsCanvas.yview)
+        #     self.notificationsCanvasScrollbar.pack(side = RIGHT, fill = Y)
+        #     self.notificationsCanvas.configure(yscrollcommand = self.notificationsCanvasScrollbar.set)
+        #     self.notificationsCanvas.bind('<Configure>', lambda e: self.notificationsCanvas.configure(scrollregion = self.notificationsCanvas.bbox("all")))
+        #     self.notificationsSecondFrame = Frame(self.notificationsCanvas)
+        #     self.notificationsCanvas.create_window((0, 0), window = self.notificationsSecondFrame, anchor = NW)
+        #
+        #     CreatePath()
+        #     if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+        #         messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+        #         os._exit(0)
+        #
+        #     self.shouldTheNoNotificationsCardBeDisplayed = False
+        #     self.recipeFoundInNotifications = False
+        #     if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+        #         for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+        #             if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+        #                 if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+        #                     if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+        #                         self.recipeFoundInNotifications = True
+        #
+        #                         self.allNotificationsCard = Frame(self.notificationsSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+        #                         self.allNotificationsCard.pack(pady = 3)
+        #
+        #                         self.allNotificationsPictureCanvas = Canvas(self.allNotificationsCard, width = "65", height = "65")
+        #                         self.allNotificationsPictureCanvas.place(x = 10, y = 5)
+        #                         if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
+        #                             self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
+        #                         elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
+        #                             self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
+        #                         elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
+        #                             self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+        #                         else:
+        #                             self.allNotificationsPictureCanvas.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+        #                         self.allNotificationsPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.allNotificationsPictureCanvas.imgpath).resize((65, 65)))
+        #                         self.allNotificationsPictureCanvas.create_image(32.5, 32.5, image = self.allNotificationsPictureCanvas.image, anchor = CENTER)
+        #
+        #                         self.notificationTitle = ""
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.notificationTitle = DecryptString(line, "auth")
+        #                         self.allnotificationsName = Label(self.allNotificationsCard, text = "Título: " + self.notificationTitle)
+        #                         self.allnotificationsName.place(x = 90, y = 5)
+        #
+        #                         self.recipeNotificationTimeToCook = "0:00h"
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.recipeNotificationTimeToCook = line.split(";")[0] + "h " + line.split(";")[1] + "min"
+        #
+        #                         self.allRecipesNotificationTime = Label(self.allNotificationsCard, text = "Tempo de confeção: " + self.recipeNotificationTimeToCook)
+        #                         self.allRecipesNotificationTime.place(x = 90, y = 30)
+        #
+        #                         self.recipeNotificationLikes = 0
+        #                         if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes")) > 0:
+        #                             # Continuar para ver os likes
+        #                             pass
+        #                         self.recipeNotificationLikes = Label(self.allNotificationsCard, text = "Likes: " + str(self.recipeNotificationLikes))
+        #                         self.recipeNotificationLikes.place(x = 90, y = 55)
+        #
+        #                         self.recipeNotificationRating = Label(self.allNotificationsCard, text = "Rating: x")
+        #                         self.recipeNotificationRating.place(x = 150, y = 55)
+        #                         self.averageRatingLabelVarNotifications = 0.0
+        #                         self.ratingsSumNotifications, self.quantRatingsNotifications = 0, 0
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.ratingsSumNotifications += int(line.split(";")[1])
+        #                                     self.quantRatingsNotifications += 1
+        #                                 if self.quantRatingsNotifications > 0: self.averageRatingLabelVarNotifications = float(self.ratingsSumNotifications / self.quantRatingsNotifications)
+        #                         self.recipeNotificationRating["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVarNotifications)))
+        #
+        #                         self.recipeNotificationAuthorName = "Erro"
+        #                         self.recipeNotificationAuthorEmail = "Erro"
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.recipeNotificationAuthorEmail = DecryptString(line.split(";")[0], "auth")
+        #                                     self.recipeNotificationAuthorName = DecryptString(line.split(";")[1], "auth")
+        #
+        #                         self.recipeNotificationCreationDate = "01/01/2021"
+        #                         self.wasDateFoundInNotifications = False
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.recipeNotificationCreationDate = DecryptString(line, "auth")
+        #                                     self.wasDateFoundInNotifications = True
+        #                         if self.wasDateFoundInNotifications: self.dateTimeObjectNotification = datetime.datetime.strptime(self.recipeNotificationCreationDate, '%Y-%m-%d %H:%M:%S.%f')
+        #                         self.allRecipesNotificationsCreator = Label(self.allNotificationsCard, text = "Criado por: " + self.recipeNotificationAuthorName + ", " + str(self.dateTimeObjectNotification.strftime("%d/%m/%Y")))
+        #                         self.allRecipesNotificationsCreator.place(x = 220, y = 55)
+        #
+        #                         self.recipeIdNotification = 0
+        #                         with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+        #                             for line in f.readlines():
+        #                                 if line.strip().replace(" ", ""):
+        #                                     self.recipeIdNotification = int(line)
+        #
+        #                         self.notificationRecipesSeeMore = Button(self.allNotificationsCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipeIdNotification, os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i], "Notifications"))
+        #                         self.notificationRecipesSeeMore.place(x = 500, y = 27)
+        #     else: self.shouldTheNoNotificationsCardBeDisplayed = True
+        #
+        #     if self.shouldTheNoNotificationsCardBeDisplayed or not self.recipeFoundInNotifications:
+        #         self.noRecipesFoundCardNotification = Frame(self.notificationsSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+        #         self.noRecipesFoundCardNotification.pack(pady = 3)
+        #         self.noRecipesNotification = Label(self.notificationsSecondFrame, text = "Não foram encontradas receitas")
+        #         self.noRecipesNotification.place(x = 200, y = 35)
+        pass
 
     def MainProgram_GlobalFunctions(self, func, *arg):
         def ClearFilters(a):
@@ -920,19 +1007,32 @@ class MainProgram:
                 self.usersRecipesSearchByIngredientText.delete(0, END)
                 self.usersRecipesSearchByTitleText.delete(0, END)
 
+        def ResetScrollRegion(target):
+            target.configure(scrollregion = target.bbox("all"))
+
         if func == "ClearFilters":
             ClearFilters(list(arg)[0])
         elif func == "ClearAllFilters":
             ClearAllFilters(list(arg)[0])
+        elif func == "ResetScrollRegion":
+            ResetScrollRegion(list(arg)[0])
 
     def MainProgram_AddRecipe(self):
         self.newRecipeWindow = Toplevel(self.master)
         self.app = Recipe(self.newRecipeWindow)
 
-    def MainProgram_ShowRecipeDetails(self, id = 0, path = ""):
+    def MainProgram_ShowRecipeDetails(self, id = 0, path = "", page = ""):
         def RecipeDetailsCustomClose():
             self.recipeDetailsWindow.destroy()
             self.master.update()
+            self.ClearWindowWidgets(self.tabUsersRecipes)
+            self.ClearWindowWidgets(self.tabAllRecipes)
+            self.ClearWindowWidgets(self.tabUsersFavourite)
+            self.hasUserGoneToPage1, self.hasUserGoneToPage2, self.hasUserGoneToPage3 = False, False, False
+            self.shouldRecipesBeLoaded = True
+            if page == "AllRecipes": self.MainProgram_AllRecipesPage()
+            elif page == "UserFavorites": pass
+            elif page == "UserRecipes": self.MainProgram_UsersRecipesPage()
 
         def VerifyUserLike():
             self.hasUserLikedThisRecipe = False
@@ -1348,158 +1448,148 @@ class MainProgram:
                 # messagebox.showerror("Erro", "Ocorreu um erro i nesperado\nO programa vai fechar", parent = self.master)
                 # os._exit(0)
 
+    def MainProgram_EditRecipe(self):
+        pass
+
     def MainProgram_ShowRecipeCards(self, page):
         def AppendToGlobalDict(i):
             self.data = {}
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
-                for line in f.readlines():
+            self.currDir = os.getcwd()
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["id"] = line.strip()
 
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\author.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\author.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["email"] = DecryptString(line.strip().split(";")[0], "auth")
                         self.data["nome"] = DecryptString(line.strip().split(";")[1], "auth")
 
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\name.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\name.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["titulo"] = DecryptString(line.strip(), "auth")
 
             self.data["ingredientes"] = []
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\ingredients.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir+ "\\data\\recipes")[i] + "\\ingredients.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["ingredientes"].append(DecryptString(line.strip(), "auth"))
 
             self.data["categorias"] = []
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\categories.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\categories.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["categorias"].append(DecryptString(line.strip(), "auth"))
 
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\views\\nviews.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\views\\nviews.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["views"] = line.strip()
 
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\likes\\nlikes.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\likes\\nlikes.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["likes"] = line.strip()
 
             self.data["rating"] = 0.0
             self.auxSumRating, self.auxQuantRating = 0, 0
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.auxSumRating += int(line.split(";")[1])
                         self.auxQuantRating += 1
                     if self.auxQuantRating > 0: self.data["rating"] = float(self.auxSumRating / self.auxQuantRating)
 
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\time.txt", "r", encoding = "utf-8") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\time.txt", "r", encoding = "utf-8") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["tempo_confecao"] = line.strip()
 
             self.data["data"] = "01/01/2021"
-            with open(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
-                for line in f.readlines():
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                for line in f:
                     if line.strip().replace(" ", ""):
                         self.data["data"] = DecryptString(line, "auth")
 
-            self.data["path"] = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]
+            self.data["path"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i]
 
-            self.data["imgpath"] = os.getcwd() + "\\data\\images\\default_recipes.jpg"
-            if os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"):
-                self.data["imgpath"] = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpg"
-            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"):
-                self.data["imgpath"] = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.png"
-            elif os.path.exists(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"):
-                self.data["imgpath"] = os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i] + "\\picture.jpeg"
+            self.data["imgpath"] = self.currDir + "\\data\\images\\default_recipes.jpg"
+            if os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"
+            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"
+            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"
 
             self.recipesToBeDisplayed["recipes"].append(self.data)
 
-        self.shouldTheNoRecipesCardBeDisplayed = False
-        if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-            self.recipesToBeDisplayed = { "recipes":[] }
-            for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1, -1, -1):
-                if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                    if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                        if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
-                            if page == "AllRecipes":
-                                AppendToGlobalDict(i)
-                            elif page == "UserFavorites":
-                                pass
-                            elif page == "UserRecipes":
-                                pass
-        else: self.shouldTheNoRecipesCardBeDisplayed = True
-
-        if page == "AllRecipes":
-            try:
-                self.recipesFrame.destroy()
-                self.recipesCanvas.destroy()
-                self.recipesCanvasScrollbar.destroy()
-                self.recipesSecondFrame.destroy()
-            except: pass
-
-            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
-            self.recipesFrame.place(x = 5, y = 45)
-            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
-            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
-            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
-            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
-            self.recipesSecondFrame = Frame(self.recipesCanvas)
-            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
-        elif page == "UserFavorites":
-            pass
-
-        CreatePath()
-        if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-            messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
-            os._exit(0)
-
-        if len(self.recipesToBeDisplayed["recipes"]) > 0:
-            for i in range(len(self.recipesToBeDisplayed["recipes"])):
-                if page == "AllRecipes":
-                    self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                    self.allRecipesCard.pack(pady = 3)
-                    self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
-                    self.allRecipesPictureCanvas.place(x = 10, y = 5)
-                    self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipesToBeDisplayed["recipes"][i]["imgpath"]).resize((65, 65)))
-                    self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
-                    self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipesToBeDisplayed["recipes"][i]["titulo"])
-                    self.allRecipesName.place(x = 90, y = 5)
-                    self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
-                    self.allRecipesTime.place(x = 90, y = 30)
-                    self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.recipesToBeDisplayed["recipes"][i]["likes"])
-                    self.allRecipesLikes.place(x = 90, y = 55)
-                    self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.recipesToBeDisplayed["recipes"][i]["rating"]))
-                    self.allRecipesRating.place(x = 150, y = 55)
-                    self.allRecipesDateTimeObject = datetime.datetime.strptime(self.recipesToBeDisplayed["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
-                    self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipesToBeDisplayed["recipes"][i]["nome"] + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
-                    self.allRecipesCreator.place(x = 220, y = 55)
-                    if self.loggedInUserInformation[3] == "administrator":
-                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"]))
-                        self.allRecipesSeeMore.place(x = 450, y = 27)
-                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
-                        self.allRecipesEdit.place(x = 520, y = 10)
-                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
-                        self.allRecipesRemove.place(x = 520, y = 39)
-                    else:
-                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"]))
-                        self.allRecipesSeeMore.place(x = 500, y = 27)
-        else: self.shouldTheNoRecipesCardBeDisplayed = True
-
-        if self.shouldTheNoRecipesCardBeDisplayed:
+        if self.shouldRecipesBeLoaded:
             if page == "AllRecipes":
-                self.allRecipesNoRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                self.allRecipesNoRecipesFoundCard.pack(pady = 3)
-                self.allRecipesNoRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
-                self.allRecipesNoRecipesLabel.place(x = 200, y = 35)
+                self.allRecipesLoading = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.allRecipesLoading.pack(pady = 3)
+                self.allRecipesLoadingLabel = Label(self.recipesSecondFrame, text = "A carregar receitas")
+                self.allRecipesLoadingLabel.place(relx=0.5, rely=0.5, anchor=CENTER)
+
+            self.shouldRecipesBeLoaded = False
+            self.recipesToBeDisplayed = { "recipes":[] }
+            self.shouldTheNoRecipesCardBeDisplayed = False
+            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1, -1, -1):
+                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                                AppendToGlobalDict(i)
+            else: self.shouldTheNoRecipesCardBeDisplayed = True
+            self.allRecipesLoading.destroy()
+            self.MainProgram_ShowRecipeCards(page)
+        else:
+
+            CreatePath()
+            if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+                os._exit(0)
+
+            if len(self.recipesToBeDisplayed["recipes"]) > 0:
+                for i in range(len(self.recipesToBeDisplayed["recipes"])):
+                    if page == "AllRecipes":
+                        self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                        self.allRecipesCard.pack(pady = 3)
+                        self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
+                        self.allRecipesPictureCanvas.place(x = 10, y = 5)
+                        self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipesToBeDisplayed["recipes"][i]["imgpath"]).resize((65, 65)))
+                        self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
+                        self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipesToBeDisplayed["recipes"][i]["titulo"])
+                        self.allRecipesName.place(x = 90, y = 5)
+                        self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
+                        self.allRecipesTime.place(x = 90, y = 30)
+                        self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.recipesToBeDisplayed["recipes"][i]["likes"])
+                        self.allRecipesLikes.place(x = 90, y = 55)
+                        self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.recipesToBeDisplayed["recipes"][i]["rating"]))
+                        self.allRecipesRating.place(x = 150, y = 55)
+                        self.allRecipesDateTimeObject = datetime.datetime.strptime(self.recipesToBeDisplayed["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
+                        self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipesToBeDisplayed["recipes"][i]["nome"] + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
+                        self.allRecipesCreator.place(x = 220, y = 55)
+                        if self.loggedInUserInformation[3] == "administrator":
+                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"], "AllRecipes"))
+                            self.allRecipesSeeMore.place(x = 450, y = 27)
+                            self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
+                            self.allRecipesEdit.place(x = 520, y = 10)
+                            self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
+                            self.allRecipesRemove.place(x = 520, y = 39)
+                        else:
+                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"], "AllRecipes"))
+                            self.allRecipesSeeMore.place(x = 500, y = 27)
+                        self.MainProgram_GlobalFunctions("ResetScrollRegion", self.recipesCanvas)
+            else: self.shouldTheNoRecipesCardBeDisplayed = True
+
+            if self.shouldTheNoRecipesCardBeDisplayed:
+                if page == "AllRecipes":
+                    self.allRecipesNoRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                    self.allRecipesNoRecipesFoundCard.pack(pady = 3)
+                    self.allRecipesNoRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
+                    self.allRecipesNoRecipesLabel.place(x = 200, y = 35)
 
 class Login:
     def __init__(self, master):

@@ -18,3 +18,4 @@ Snacks
 Geleias
 Bebidas
 Outro
+Vegetariano

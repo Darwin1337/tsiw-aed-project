@@ -1951,14 +1951,12 @@ class Recipe:
         def AddIngredient():
             if self.listboxRecipeIngredients.size() < 30:
                 if str(self.recipeIngredientsText.get()).replace(" ", ""):
-                    if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(str(self.recipeIngredientsText.get()).replace(" ", "")):
-                        if len(str(self.recipeIngredientsText.get()).replace(" ", "")) > 2:
-                            self.listboxRecipeIngredients.insert(END, str(self.recipeIngredientsText.get()))
-                            self.addNewIngredientWindow.destroy()
-                            self.master.update()
-                            self.master.grab_set()
-                        else: messagebox.showerror("Erro", "O campo de ingrediente tem de ter, pelo menos, 3 caracteres", parent = self.addNewIngredientWindow)
-                    else: messagebox.showerror("Erro", "O campo de ingrediente não pode conter caracteres especiais", parent = self.addNewIngredientWindow)
+                    if len(str(self.recipeIngredientsText.get()).replace(" ", "")) > 2:
+                        self.listboxRecipeIngredients.insert(END, str(self.recipeIngredientsText.get()))
+                        self.addNewIngredientWindow.destroy()
+                        self.master.update()
+                        self.master.grab_set()
+                    else: messagebox.showerror("Erro", "O campo de ingrediente tem de ter, pelo menos, 3 caracteres", parent = self.addNewIngredientWindow)
                 else: messagebox.showerror("Erro", "Introduza algum ingrediente", parent = self.addNewIngredientWindow)
             else: messagebox.showerror("Erro", "Atingiu o limite máximo de ingredientes (30)", parent = self.addNewIngredientWindow)
 

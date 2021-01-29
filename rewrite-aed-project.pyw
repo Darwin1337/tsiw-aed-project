@@ -12,8 +12,7 @@ from functools import partial # Usado para acionar eventos com argumentos custom
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 from threading import Thread
-import json # remover isto
-import time
+import json
 
 # pip install cryptocode
 # pip install PySide2
@@ -90,6 +89,11 @@ def MD5Checksum(img):
         else:
             messagebox.showerror("Erro", "O ficheiro 'data\\images\\favIcon.png' está em falta\nO programa irá fechar")
             os._exit(0)
+
+def GetImageChecksum(path):
+    if os.path.exists(path):
+        md5hash = hashlib.md5(Image.open(path).tobytes())
+        return str(md5hash.hexdigest())
 
 def CenterWindow(target):
     target.update_idletasks()
@@ -168,6 +172,7 @@ class MainProgram:
             if a == 0: self.MainProgram_EditProfile()
             if a == 1: self.MainProgram_UsersRecipesPage()
             if a == 2: self.MainProgram_AllRecipesPage()
+            if a == 3: self.MainProgram_UsersFavorites()
             if a == 4: self.MainProgram_Notifications()
 
         def UpdateFiltersList():
@@ -537,7 +542,7 @@ class MainProgram:
         self.tabEditProfile = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersRecipes = Frame(self.tabControl, width = 649, height = 500)
         self.tabAllRecipes = Frame(self.tabControl, width = 649, height = 500)
-        self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500, bg = "black")
+        self.tabUsersFavourite = Frame(self.tabControl, width = 649, height = 500)
         self.tabUsersNotifications = Frame(self.tabControl, width = 649, height = 500)
         self.tabControl.add(self.tabEditProfile)
         self.tabControl.add(self.tabUsersRecipes)
@@ -848,8 +853,14 @@ class MainProgram:
             self.editProfileButton.place(x=155,y=350)
 
     def MainProgram_UsersRecipesPage(self):
+        def UsersRecipesApplyFilters():
+            self.usersRecipesPageFilters.clear()
+            self.usersRecipesPageFilters.extend([self.usersRecipesSearchByTitleText.get(), self.usersRecipesSearchByIngredientText.get(), self.usersRecipesSearchByCategoryDropdown.get(), self.usersRecipesOrderByDropdown.get()])
+            self.MainProgram_ShowRecipeCards("UsersRecipes", self.usersRecipesPageFilters)
+
         if not self.hasUserGoneToPage1:
             self.hasUserGoneToPage1 = True
+            self.usersRecipesPageFilters = []
 
             # [Layout] - Filters fieldset
             self.usersRecipesFilterPanel = LabelFrame(self.tabUsersRecipes, text = "Filtros de Pesquisa", width = "640", height = "135", bd = "2")
@@ -883,7 +894,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.usersRecipesOrderByLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por:")
             self.usersRecipesOrderByLabel.place(x = 225, y = 55)
-            self.usersRecipesOrderByList = ["Mais Recentes", "Mais Antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
+            self.usersRecipesOrderByList = ["Mais recentes", "Mais antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.usersRecipesOrderByDropdown = ttk.Combobox(self.usersRecipesFilterPanel, value = self.usersRecipesOrderByList, width = "25")
             self.usersRecipesOrderByDropdown.place(x = 228, y = 80)
             self.usersRecipesOrderByDropdown.current(0)
@@ -891,11 +902,11 @@ class MainProgram:
             self.usersRecipesOrderByDropdownClearButton.place(x = 405, y = 78)
 
             # [Layout] - Clear filters button
-            self.usersRecipesClearAllFiltersButton = ttk.Button(self.usersRecipesFilterPanel, text = "Limpar todos os filtros", width = "25", command = partial(self.MainProgram_GlobalFunctions, "ClearAllFilters", False))
+            self.usersRecipesClearAllFiltersButton = ttk.Button(self.usersRecipesFilterPanel, text = "Limpar todos os filtros", width = "25", command = partial(self.MainProgram_GlobalFunctions, "ClearAllFilters", 2))
             self.usersRecipesClearAllFiltersButton.place(x = 468, y = 28)
 
             # [Layout] - Apply filters button
-            self.usersRecipesApplyAllFiltersButton = ttk.Button(self.usersRecipesFilterPanel, text = "Aplicar filtros", width = "25")
+            self.usersRecipesApplyAllFiltersButton = ttk.Button(self.usersRecipesFilterPanel, text = "Aplicar filtros", width = "25", command = UsersRecipesApplyFilters)
             self.usersRecipesApplyAllFiltersButton.place(x = 468, y = 78)
 
             # [Layout] - Recipes fieldset
@@ -903,27 +914,20 @@ class MainProgram:
             self.usersRecipesPanel.place(x = 5, y = 150)
 
             # [Layout] - Create recipe button
-            self.usersCreateRecipeButton = Button(self.usersRecipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "UsersRecipes",  []))
+            self.usersCreateRecipeButton = Button(self.usersRecipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "UsersRecipes", self.usersRecipesPageFilters))
             self.usersCreateRecipeButton.place(x = 140, y = 10)
 
-            # [Layout] - Recipes frame
-            self.usersRecipesFrame = Frame(self.usersRecipesPanel, width = 625, height = 280)
-            self.usersRecipesFrame.place(x = 5, y = 45)
-            self.usersRecipesCanvas = Canvas(self.usersRecipesFrame, width = 605)
-            self.usersRecipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            self.usersRecipesCanvasScrollbar = ttk.Scrollbar(self.usersRecipesFrame, orient = VERTICAL, command = self.usersRecipesCanvas.yview)
-            self.usersRecipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            self.usersRecipesCanvas.configure(yscrollcommand = self.usersRecipesCanvasScrollbar.set)
-            self.usersRecipesCanvas.bind('<Configure>', lambda e: self.usersRecipesCanvas.configure(scrollregion = self.usersRecipesCanvas.bbox("all")))
-            self.usersRecipesSecondFrame = Frame(self.usersRecipesCanvas)
-            self.usersRecipesCanvas.create_window((0, 0), window = self.usersRecipesSecondFrame, anchor = NW)
-
-            for i in range(100):
-                Label(self.usersRecipesSecondFrame, text = "teste").pack()
+        self.MainProgram_ShowRecipeCards("UsersRecipes", self.usersRecipesPageFilters)
 
     def MainProgram_AllRecipesPage(self, *args):
+        def AllRecipesApplyFilters():
+            self.allRecipesPageFilters.clear()
+            self.allRecipesPageFilters.extend([self.searchByTitleText.get(), self.searchByIngredientText.get(), self.searchByCategoryDropdown.get(), self.orderByDropdown.get()])
+            self.MainProgram_ShowRecipeCards("AllRecipes", self.allRecipesPageFilters)
+
         if not self.hasUserGoneToPage2:
             self.hasUserGoneToPage2 = True
+            self.allRecipesPageFilters = []
 
             # [Layout] - Filters fieldset
             self.filterPanel = LabelFrame(self.tabAllRecipes, text = "Filtros de Pesquisa", width = "640", height = "135", bd = "2")
@@ -957,7 +961,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.orderByLabel = Label(self.filterPanel, text = "Ordernar por:")
             self.orderByLabel.place(x = 225, y = 55)
-            self.orderByList = ["Mais Recentes", "Mais Antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
+            self.orderByList = ["Mais recentes", "Mais antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.orderByDropdown = ttk.Combobox(self.filterPanel, value = self.orderByList, width = "25")
             self.orderByDropdown.place(x = 228, y = 80)
             self.orderByDropdown.current(0)
@@ -965,11 +969,11 @@ class MainProgram:
             self.orderByDropdownClearButton.place(x = 405, y = 78)
 
             # [Layout] - Clear filters button
-            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Limpar todos os filtros", width = "25", command = partial(self.MainProgram_GlobalFunctions, "ClearAllFilters", True))
+            self.clearAllFiltersButton = ttk.Button(self.filterPanel, text = "Limpar todos os filtros", width = "25", command = partial(self.MainProgram_GlobalFunctions, "ClearAllFilters", 1))
             self.clearAllFiltersButton.place(x = 468, y = 28)
 
             # [Layout] - Apply filters button
-            self.applyAllFiltersButton = ttk.Button(self.filterPanel, text = "Aplicar filtros", width = "25")
+            self.applyAllFiltersButton = ttk.Button(self.filterPanel, text = "Aplicar filtros", width = "25", command = AllRecipesApplyFilters)
             self.applyAllFiltersButton.place(x = 468, y = 78)
 
             # [Layout] - Recipes fieldset
@@ -977,10 +981,77 @@ class MainProgram:
             self.recipesPanel.place(x = 5, y = 150)
 
             # [Layout] - Create recipe button
-            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "AllRecipes", []))
+            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "AllRecipes", self.allRecipesPageFilters))
             self.createRecipeButton.place(x = 140, y = 10)
 
-            self.MainProgram_ShowRecipeCards("AllRecipes", "isto fica com os filtros")
+        self.MainProgram_ShowRecipeCards("AllRecipes", self.allRecipesPageFilters)
+
+    def MainProgram_UsersFavorites(self):
+        def UsersFavoritesApplyFilters():
+            self.usersFavoritesPageFilters.clear()
+            self.usersFavoritesPageFilters.extend([self.usersFavoritesSearchByTitleText.get(), self.usersFavoritesSearchByIngredientText.get(), self.usersFavoritesSearchByCategoryDropdown.get(), self.usersFavoritesOrderByDropdown.get()])
+            self.MainProgram_ShowRecipeCards("UsersFavorites", self.usersFavoritesPageFilters)
+
+        if not self.hasUserGoneToPage3:
+            self.hasUserGoneToPage3 = True
+            self.usersFavoritesPageFilters = []
+
+            # [Layout] - Filters fieldset
+            self.usersFavoritesFilterPanel = LabelFrame(self.tabUsersFavourite, text = "Filtros de Pesquisa", width = "640", height = "135", bd = "2")
+            self.usersFavoritesFilterPanel.place(x = 5, y = 5)
+
+            # [Layout] - Search by title filter
+            self.usersFavoritesSearchByTitleLabel = Label(self.usersFavoritesFilterPanel, text = "Pesquisar por título:")
+            self.usersFavoritesSearchByTitleLabel.place(x = 5, y = 5)
+            self.usersFavoritesSearchByTitleText = Entry(self.usersFavoritesFilterPanel, width = "25")
+            self.usersFavoritesSearchByTitleText.place(x = 8, y = 30)
+            self.usersFavoritesSearchByTitleClearButton = ttk.Button(self.usersFavoritesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersFavoritesSearchByTitleText))
+            self.usersFavoritesSearchByTitleClearButton.place(x = 165, y = 27)
+
+            # [Layout] - Search by ingredient filter
+            self.usersFavoritesSearchByIngredientLabel = Label(self.usersFavoritesFilterPanel, text = "Pesquisar por ingrediente:")
+            self.usersFavoritesSearchByIngredientLabel.place(x = 5, y = 55)
+            self.usersFavoritesSearchByIngredientText = Entry(self.usersFavoritesFilterPanel, width = "25")
+            self.usersFavoritesSearchByIngredientText.place(x = 8, y = 80)
+            self.usersFavoritesSearchByIngredientClearButton = ttk.Button(self.usersFavoritesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersFavoritesSearchByIngredientText))
+            self.usersFavoritesSearchByIngredientClearButton.place(x = 165, y = 77)
+
+            # [Layout] - Search by category filter
+            self.usersFavoritesSearchByCategoryLabel = Label(self.usersFavoritesFilterPanel, text = "Ordernar por categoria:")
+            self.usersFavoritesSearchByCategoryLabel.place(x = 225, y = 5)
+            self.usersFavoritesSearchByCategoryDropdown = ttk.Combobox(self.usersFavoritesFilterPanel, value = self.filtersCategoriesList, width = "25")
+            self.usersFavoritesSearchByCategoryDropdown.place(x = 228, y = 30)
+            self.usersFavoritesSearchByCategoryDropdown.current(0)
+            self.usersFavoritesSearchByCategoryDropdownClearButton = ttk.Button(self.usersFavoritesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersFavoritesSearchByCategoryDropdown))
+            self.usersFavoritesSearchByCategoryDropdownClearButton.place(x = 405, y = 28)
+
+            # [Layout] - Order by filter
+            self.usersFavoritesOrderByLabel = Label(self.usersFavoritesFilterPanel, text = "Ordernar por:")
+            self.usersFavoritesOrderByLabel.place(x = 225, y = 55)
+            self.usersFavoritesOrderByList = ["Mais recentes", "Mais antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
+            self.usersFavoritesOrderByDropdown = ttk.Combobox(self.usersFavoritesFilterPanel, value = self.usersFavoritesOrderByList, width = "25")
+            self.usersFavoritesOrderByDropdown.place(x = 228, y = 80)
+            self.usersFavoritesOrderByDropdown.current(0)
+            self.usersFavoritesOrderByDropdownClearButton = ttk.Button(self.usersFavoritesFilterPanel, text = "X", width = "2", command = partial(self.MainProgram_GlobalFunctions, "ClearFilters", self.usersFavoritesOrderByDropdown))
+            self.usersFavoritesOrderByDropdownClearButton.place(x = 405, y = 78)
+
+            # [Layout] - Clear filters button
+            self.usersFavoritesClearAllFiltersButton = ttk.Button(self.usersFavoritesFilterPanel, text = "Limpar todos os filtros", width = "25", command = partial(self.MainProgram_GlobalFunctions, "ClearAllFilters", 3))
+            self.usersFavoritesClearAllFiltersButton.place(x = 468, y = 28)
+
+            # [Layout] - Apply filters button
+            self.usersFavoritesApplyAllFiltersButton = ttk.Button(self.usersFavoritesFilterPanel, text = "Aplicar filtros", width = "25", command = UsersFavoritesApplyFilters)
+            self.usersFavoritesApplyAllFiltersButton.place(x = 468, y = 78)
+
+            # [Layout] - Recipes fieldset
+            self.usersFavoritesPanel = LabelFrame(self.tabUsersFavourite, text = "Receitas favoritas", width = "640", height = "345", bd = "2")
+            self.usersFavoritesPanel.place(x = 5, y = 150)
+
+            # [Layout] - Create recipe button
+            self.usersFavoritesCreateRecipeButton = Button(self.usersFavoritesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "UsersFavorites", self.usersFavoritesPageFilters))
+            self.usersFavoritesCreateRecipeButton.place(x = 140, y = 10)
+
+        self.MainProgram_ShowRecipeCards("UsersFavorites", self.usersFavoritesPageFilters)
 
     def MainProgram_Notifications(self):
         # if not self.hasUserGoneToPage4:
@@ -1113,16 +1184,21 @@ class MainProgram:
             else: a.current(0)
 
         def ClearAllFilters(a):
-            if a:
+            if a == 1:
                 self.orderByDropdown.current(0)
                 self.searchByCategoryDropdown.current(0)
                 self.searchByIngredientText.delete(0, END)
                 self.searchByTitleText.delete(0, END)
-            else:
+            elif a == 2:
                 self.usersRecipesOrderByDropdown.current(0)
                 self.usersRecipesSearchByCategoryDropdown.current(0)
                 self.usersRecipesSearchByIngredientText.delete(0, END)
                 self.usersRecipesSearchByTitleText.delete(0, END)
+            elif a == 3:
+                self.usersFavoritesOrderByDropdown.current(0)
+                self.usersFavoritesSearchByCategoryDropdown.current(0)
+                self.usersFavoritesSearchByIngredientText.delete(0, END)
+                self.usersFavoritesSearchByTitleText.delete(0, END)
 
         def ResetScrollRegion(target):
             target.configure(scrollregion = target.bbox("all"))
@@ -1762,7 +1838,7 @@ class MainProgram:
         self.labelSelectRecipeImage.place(x = 130, y = 155, anchor = E)
         self.recipePictureCanvasEdit = Canvas(self.generalInformationLabelFrame, width = "100", height = "100")
         self.recipePictureCanvasEdit.place(x = 150, y = 200, anchor = W)
-        
+
         try:
             self.recipePictureCanvasEdit.imgpath = self.globalRecipesDict["recipes"][int(id)]["imgpath"]
             self.recipePictureCanvasEdit.image = ImageTk.PhotoImage(Image.open(self.recipePictureCanvasEdit.imgpath).resize((100, 100)))
@@ -1862,13 +1938,7 @@ class MainProgram:
         self.editRecipeButton = Button(self.editRecipe, text = "Editar", relief = "groove", width = "20", height = "2", command = EditAllRecipe)
         self.editRecipeButton.place(x = 175, y = 730)
 
-        CreatePath()
-        if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-            messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
-            os._exit(0)
-
     def MainProgram_ShowRecipeCards(self, page, filters):
-
         def RemoveRecipe(path):
             self.messageBoxAnswer = messagebox.askquestion("Eliminar", "Tem a certeza que pretende eliminar a receita?", icon = 'warning')
             if self.messageBoxAnswer=="yes":
@@ -1876,9 +1946,12 @@ class MainProgram:
                 ##Eliminar do dicionario!!
                 self.MainProgram_ShowRecipeCards(page, filters)
 
-            else:
-                pass
+        CreatePath()
+        if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+            messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+            os._exit(0)
 
+        # Delete the frame that contains the recipe cards
         if page == "AllRecipes":
             try:
                 self.recipesFrame.destroy()
@@ -1886,7 +1959,6 @@ class MainProgram:
                 self.recipesCanvasScrollbar.destroy()
                 self.recipesSecondFrame.destroy()
             except: pass
-
             self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
             self.recipesFrame.place(x = 5, y = 45)
             self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
@@ -1897,45 +1969,314 @@ class MainProgram:
             self.recipesCanvas.bind("<Configure>", partial(self.MainProgram_GlobalFunctions, "ResetScrollRegion", self.recipesCanvas))
             self.recipesSecondFrame = Frame(self.recipesCanvas)
             self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
+        elif page == "UsersRecipes":
+            try:
+                self.usersRecipesFrame.destroy()
+                self.usersRecipesCanvas.destroy()
+                self.usersRecipesCanvasScrollbar.destroy()
+                self.usersRecipesSecondFrame.destroy()
+            except: pass
+            self.usersRecipesFrame = Frame(self.usersRecipesPanel, width = 625, height = 280)
+            self.usersRecipesFrame.place(x = 5, y = 45)
+            self.usersRecipesCanvas = Canvas(self.usersRecipesFrame, width = 605)
+            self.usersRecipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.usersRecipesCanvasScrollbar = ttk.Scrollbar(self.usersRecipesFrame, orient = VERTICAL, command = self.usersRecipesCanvas.yview)
+            self.usersRecipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.usersRecipesCanvas.configure(yscrollcommand = self.usersRecipesCanvasScrollbar.set)
+            self.usersRecipesCanvas.bind('<Configure>', lambda e: self.usersRecipesCanvas.configure(scrollregion = self.usersRecipesCanvas.bbox("all")))
+            self.usersRecipesSecondFrame = Frame(self.usersRecipesCanvas)
+            self.usersRecipesCanvas.create_window((0, 0), window = self.usersRecipesSecondFrame, anchor = NW)
+        elif page == "UsersFavorites":
+            try:
+                self.usersFavoritesFrame.destroy()
+                self.usersFavoritesCanvas.destroy()
+                self.usersFavoritesCanvasScrollbar.destroy()
+                self.usersFavoritesSecondFrame.destroy()
+            except: pass
+            self.usersFavoritesFrame = Frame(self.usersFavoritesPanel, width = 625, height = 280)
+            self.usersFavoritesFrame.place(x = 5, y = 45)
+            self.usersFavoritesCanvas = Canvas(self.usersFavoritesFrame, width = 605)
+            self.usersFavoritesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.usersFavoritesCanvasScrollbar = ttk.Scrollbar(self.usersFavoritesFrame, orient = VERTICAL, command = self.usersFavoritesCanvas.yview)
+            self.usersFavoritesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.usersFavoritesCanvas.configure(yscrollcommand = self.usersFavoritesCanvasScrollbar.set)
+            self.usersFavoritesCanvas.bind('<Configure>', lambda e: self.usersFavoritesCanvas.configure(scrollregion = self.usersFavoritesCanvas.bbox("all")))
+            self.usersFavoritesSecondFrame = Frame(self.usersFavoritesCanvas)
+            self.usersFavoritesCanvas.create_window((0, 0), window = self.usersFavoritesSecondFrame, anchor = NW)
+        else:
+            messagebox.showerror("Erro", "Ocorreu um erro inesperado\nO programa vai fechar", parent = self.master)
+            os._exit(0)
 
-        # Show recipes
+        # Apply the filters coming from the button
+        self.resultingDict = { "recipes": [] }
+        print("Apply these filters: " + str(filters))
+        print("Refresh cards on this page: " + page)
+
+        if page != "UsersFavorites":
+            if len(filters) > 0:
+                # Order by category
+                if not filters[2] == "Qualquer":
+                    self.wasCategoryFound = False
+                    self.orderedByCategoryDict = { "recipes": [] }
+                    for i in range(len(self.globalRecipesDict["recipes"])):
+                        for j in range(len(self.globalRecipesDict["recipes"][i]["categorias"])):
+                            if self.globalRecipesDict["recipes"][i]["categorias"][j] == filters[2]:
+                                self.orderedByCategoryDict["recipes"].append(self.globalRecipesDict["recipes"][i])
+                                self.wasCategoryFound = True
+                                self.shouldTheNoRecipesCardBeDisplayed = False
+                    if not self.wasCategoryFound: self.shouldTheNoRecipesCardBeDisplayed = True
+                else:
+                    self.shouldTheNoRecipesCardBeDisplayed = False
+                    self.orderedByCategoryDict = self.globalRecipesDict.copy()
+
+                # Order by...
+                self.orderedByDict = { "recipes": [] }
+                if filters[3] == "Mais recentes":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: i['data'], reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais antigos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: i['data']):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais vistos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['views']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menos vistos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['views'])):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais gostados":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['likes']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menos gostados":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['likes'])):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Maior rating":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: float(i['rating']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menor rating":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: float(i['rating'])):
+                        self.orderedByDict["recipes"].append(recipe)
+
+                # Search by title
+                self.searchByNameDict = { "recipes": [] }
+                if filters[0]:
+                    for i in range(len(self.orderedByDict["recipes"])):
+                        if filters[0].lower() in self.orderedByDict["recipes"][i]["titulo"].lower():
+                            self.searchByNameDict["recipes"].append(self.orderedByDict["recipes"][i])
+                else: self.searchByNameDict = self.orderedByDict.copy()
+
+                # Search by ingredient
+                self.searchByIngredientDict = { "recipes": [] }
+                if filters[1]:
+                    for i in range(len(self.searchByNameDict["recipes"])):
+                        for j in range(len(self.searchByNameDict["recipes"][i]["ingredientes"])):
+                            if filters[1].lower() in self.searchByNameDict["recipes"][i]["ingredientes"][j].lower():
+                                self.searchByIngredientDict["recipes"].append(self.searchByNameDict["recipes"][i])
+                                break
+                else: self.searchByIngredientDict = self.searchByNameDict.copy()
+
+                self.resultingDict.clear()
+                self.resultingDict = self.searchByIngredientDict.copy()
+                if len(self.resultingDict["recipes"]) <= 0:
+                    self.shouldTheNoRecipesCardBeDisplayed = True
+            else:
+                if len(self.globalRecipesDict["recipes"]) > 0:
+                    self.shouldTheNoRecipesCardBeDisplayed = False
+                    self.orderedByDict = { "recipes": [] }
+                    for recipe in sorted(self.globalRecipesDict["recipes"], key = lambda i: i['data'], reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                    self.resultingDict.clear()
+                    self.resultingDict = self.orderedByDict.copy()
+                else: self.shouldTheNoRecipesCardBeDisplayed = True
+        else:
+            self.allFavoritedRecipes = { "recipes": [] }
+            # Load all favorited recipes
+            self.wereFavoritesFoundCustomMade = False
+            for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes"))):
+                if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                    if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        with open(os.getcwd() + "\\data\\recipes\\" + str(os.listdir(os.getcwd() + "\\data\\recipes")[i]) + "\\favoritedby.txt", "r") as f:
+                            for line in f:
+                                if line.strip():
+                                    if line.strip() == EncryptSHA256(self.loggedInUserInformation[1]):
+                                        self.wereFavoritesFoundCustomMade = True
+                                        self.gottenIdCustomMade = str(os.listdir(os.getcwd() + "\\data\\recipes")[i]).split("-")[-1]
+                                        for j in range(len(self.globalRecipesDict["recipes"])):
+                                            if int(self.globalRecipesDict["recipes"][j]["id"]) == int(self.gottenIdCustomMade):
+                                                self.allFavoritedRecipes["recipes"].append(self.globalRecipesDict["recipes"][j])
+                                                break
+            if not self.wereFavoritesFoundCustomMade: self.shouldTheNoRecipesCardBeDisplayed = True
+            if len(filters) > 0:
+                # Order by category
+                if not filters[2] == "Qualquer":
+                    self.wasCategoryFound = False
+                    self.orderedByCategoryDict = { "recipes": [] }
+                    for i in range(len(self.allFavoritedRecipes["recipes"])):
+                        for j in range(len(self.allFavoritedRecipes["recipes"][i]["categorias"])):
+                            if self.allFavoritedRecipes["recipes"][i]["categorias"][j] == filters[2]:
+                                self.orderedByCategoryDict["recipes"].append(self.allFavoritedRecipes["recipes"][i])
+                                self.wasCategoryFound = True
+                                self.shouldTheNoRecipesCardBeDisplayed = False
+                    if not self.wasCategoryFound: self.shouldTheNoRecipesCardBeDisplayed = True
+                else:
+                    self.shouldTheNoRecipesCardBeDisplayed = False
+                    self.orderedByCategoryDict = self.allFavoritedRecipes.copy()
+
+                # Order by...
+                self.orderedByDict = { "recipes": [] }
+                if filters[3] == "Mais recentes":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: i['data'], reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais antigos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: i['data']):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais vistos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['views']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menos vistos":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['views'])):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Mais gostados":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['likes']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menos gostados":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: int(i['likes'])):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Maior rating":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: float(i['rating']), reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                elif filters[3] == "Menor rating":
+                    for recipe in sorted(self.orderedByCategoryDict["recipes"], key = lambda i: float(i['rating'])):
+                        self.orderedByDict["recipes"].append(recipe)
+
+                # Search by title
+                self.searchByNameDict = { "recipes": [] }
+                if filters[0]:
+                    for i in range(len(self.orderedByDict["recipes"])):
+                        if filters[0].lower() in self.orderedByDict["recipes"][i]["titulo"].lower():
+                            self.searchByNameDict["recipes"].append(self.orderedByDict["recipes"][i])
+                else: self.searchByNameDict = self.orderedByDict.copy()
+
+                # Search by ingredient
+                self.searchByIngredientDict = { "recipes": [] }
+                if filters[1]:
+                    for i in range(len(self.searchByNameDict["recipes"])):
+                        for j in range(len(self.searchByNameDict["recipes"][i]["ingredientes"])):
+                            if filters[1].lower() in self.searchByNameDict["recipes"][i]["ingredientes"][j].lower():
+                                self.searchByIngredientDict["recipes"].append(self.searchByNameDict["recipes"][i])
+                                break
+                else: self.searchByIngredientDict = self.searchByNameDict.copy()
+
+                self.resultingDict.clear()
+                self.resultingDict = self.searchByIngredientDict.copy()
+                if len(self.resultingDict["recipes"]) <= 0:
+                    self.shouldTheNoRecipesCardBeDisplayed = True
+            else:
+                if len(self.allFavoritedRecipes["recipes"]) > 0:
+                    self.shouldTheNoRecipesCardBeDisplayed = False
+                    self.orderedByDict = { "recipes": [] }
+                    for recipe in sorted(self.allFavoritedRecipes["recipes"], key = lambda i: i['data'], reverse=True):
+                        self.orderedByDict["recipes"].append(recipe)
+                    self.resultingDict.clear()
+                    self.resultingDict = self.orderedByDict.copy()
+                else: self.shouldTheNoRecipesCardBeDisplayed = True
+
+        # Create the recipes cards again
         if not self.shouldTheNoRecipesCardBeDisplayed:
-            for i in range(len(self.globalRecipesDict["recipes"])):
-                if page == "AllRecipes":
+            if page == "AllRecipes":
+                for i in range(len(self.resultingDict["recipes"])):
                     self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
                     self.allRecipesCard.pack(pady = 3)
                     self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
                     self.allRecipesPictureCanvas.place(x = 10, y = 5)
-                    self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.globalRecipesDict["recipes"][i]["imgpath"]).resize((65, 65)))
+                    self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.resultingDict["recipes"][i]["imgpath"]).resize((65, 65)))
                     self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
-                    self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.globalRecipesDict["recipes"][i]["titulo"])
+                    self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.resultingDict["recipes"][i]["titulo"])
                     self.allRecipesName.place(x = 90, y = 5)
-                    self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.globalRecipesDict["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.globalRecipesDict["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
+                    self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
                     self.allRecipesTime.place(x = 90, y = 30)
-                    self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.globalRecipesDict["recipes"][i]["likes"])
+                    self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.resultingDict["recipes"][i]["likes"])
                     self.allRecipesLikes.place(x = 90, y = 55)
-                    self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.globalRecipesDict["recipes"][i]["rating"]))
+                    self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.resultingDict["recipes"][i]["rating"]))
                     self.allRecipesRating.place(x = 150, y = 55)
-                    self.allRecipesDateTimeObject = datetime.datetime.strptime(self.globalRecipesDict["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
-                    self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.globalRecipesDict["recipes"][i]["email"]) + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
+                    self.allRecipesDateTimeObject = datetime.datetime.strptime(self.resultingDict["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
+                    self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.resultingDict["recipes"][i]["email"]) + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
                     self.allRecipesCreator.place(x = 220, y = 55)
                     if self.loggedInUserInformation[3] == "administrator":
-                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))
+                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.resultingDict["recipes"][i]["index"], self.resultingDict["recipes"][i]["path"], "AllRecipes", filters))
                         self.allRecipesSeeMore.place(x = 450, y = 27)
-                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7, command=partial(self.MainProgram_EditRecipe,self.globalRecipesDict["recipes"][i]["index"], page, filters))
+                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7, command=partial(self.MainProgram_EditRecipe,self.resultingDict["recipes"][i]["index"], page, filters))
                         self.allRecipesEdit.place(x = 520, y = 10)
-                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7, command=partial(RemoveRecipe,self.globalRecipesDict["recipes"][i]["path"]))
+                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7, command=partial(RemoveRecipe,self.resultingDict["recipes"][i]["path"]))
                         self.allRecipesRemove.place(x = 520, y = 39)
                     else:
-                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))
+                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.resultingDict["recipes"][i]["index"], self.resultingDict["recipes"][i]["path"], "AllRecipes", filters))
                         self.allRecipesSeeMore.place(x = 500, y = 27)
                     self.MainProgram_GlobalFunctions("ResetScrollRegion", self.recipesCanvas)
+            elif page == "UsersRecipes":
+                for i in range(len(self.resultingDict["recipes"])):
+                    if EncryptSHA256(self.resultingDict["recipes"][i]["email"]) == EncryptSHA256(self.loggedInUserInformation[1]):
+                        self.usersRecipesCard = Frame(self.usersRecipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                        self.usersRecipesCard.pack(pady = 3)
+                        self.usersRecipesPictureCanvas = Canvas(self.usersRecipesCard, width = "65", height = "65")
+                        self.usersRecipesPictureCanvas.place(x = 10, y = 5)
+                        self.usersRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.resultingDict["recipes"][i]["imgpath"]).resize((65, 65)))
+                        self.usersRecipesPictureCanvas.create_image(32.5, 32.5, image = self.usersRecipesPictureCanvas.image, anchor = CENTER)
+                        self.usersRecipesName = Label(self.usersRecipesCard, text = "Título: " + self.resultingDict["recipes"][i]["titulo"])
+                        self.usersRecipesName.place(x = 90, y = 5)
+                        self.usersRecipesTime = Label(self.usersRecipesCard, text = "Tempo de confeção: " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
+                        self.usersRecipesTime.place(x = 90, y = 30)
+                        self.usersRecipesLikes = Label(self.usersRecipesCard, text = "Likes: " + self.resultingDict["recipes"][i]["likes"])
+                        self.usersRecipesLikes.place(x = 90, y = 55)
+                        self.usersRecipesRating = Label(self.usersRecipesCard, text = "Rating: " + str(self.resultingDict["recipes"][i]["rating"]))
+                        self.usersRecipesRating.place(x = 150, y = 55)
+                        self.usersRecipesDateTimeObject = datetime.datetime.strptime(self.resultingDict["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
+                        self.usersRecipesCreator = Label(self.usersRecipesCard, text = "Criado por: " + self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.resultingDict["recipes"][i]["email"]) + ", " + str(self.usersRecipesDateTimeObject.strftime("%d/%m/%Y")))
+                        self.usersRecipesCreator.place(x = 220, y = 55)
+                        self.usersRecipesSeeMore = Button(self.usersRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.resultingDict["recipes"][i]["index"], self.resultingDict["recipes"][i]["path"], "UsersRecipes", filters))
+                        self.usersRecipesSeeMore.place(x = 450, y = 27)
+                        self.usersRecipesEdit = Button(self.usersRecipesCard, text = "Editar", width=7, command=partial(self.MainProgram_EditRecipe,self.resultingDict["recipes"][i]["index"], page, filters))
+                        self.usersRecipesEdit.place(x = 520, y = 10)
+                        self.usersRecipesRemove = Button(self.usersRecipesCard, text = "Remover", width=7, command=partial(RemoveRecipe,self.resultingDict["recipes"][i]["path"]))
+                        self.usersRecipesRemove.place(x = 520, y = 39)
+                        self.MainProgram_GlobalFunctions("ResetScrollRegion", self.usersRecipesCanvas)
+            elif page == "UsersFavorites":
+                for i in range(len(self.resultingDict["recipes"])):
+                    self.usersFavoritesCard = Frame(self.usersFavoritesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                    self.usersFavoritesCard.pack(pady = 3)
+                    self.usersFavoritesPictureCanvas = Canvas(self.usersFavoritesCard, width = "65", height = "65")
+                    self.usersFavoritesPictureCanvas.place(x = 10, y = 5)
+                    self.usersFavoritesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.resultingDict["recipes"][i]["imgpath"]).resize((65, 65)))
+                    self.usersFavoritesPictureCanvas.create_image(32.5, 32.5, image = self.usersFavoritesPictureCanvas.image, anchor = CENTER)
+                    self.usersFavoritesName = Label(self.usersFavoritesCard, text = "Título: " + self.resultingDict["recipes"][i]["titulo"])
+                    self.usersFavoritesName.place(x = 90, y = 5)
+                    self.usersFavoritesTime = Label(self.usersFavoritesCard, text = "Tempo de confeção: " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.resultingDict["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
+                    self.usersFavoritesTime.place(x = 90, y = 30)
+                    self.usersFavoritesLikes = Label(self.usersFavoritesCard, text = "Likes: " + self.resultingDict["recipes"][i]["likes"])
+                    self.usersFavoritesLikes.place(x = 90, y = 55)
+                    self.usersFavoritesRating = Label(self.usersFavoritesCard, text = "Rating: " + str(self.resultingDict["recipes"][i]["rating"]))
+                    self.usersFavoritesRating.place(x = 150, y = 55)
+                    self.usersFavoritesDateTimeObject = datetime.datetime.strptime(self.resultingDict["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
+                    self.usersFavoritesCreator = Label(self.usersFavoritesCard, text = "Criado por: " + self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.resultingDict["recipes"][i]["email"]) + ", " + str(self.usersFavoritesDateTimeObject.strftime("%d/%m/%Y")))
+                    self.usersFavoritesCreator.place(x = 220, y = 55)
+                    self.usersFavoritesSeeMore = Button(self.usersFavoritesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.resultingDict["recipes"][i]["index"], self.resultingDict["recipes"][i]["path"], "UsersFavorites", filters))
+                    self.usersFavoritesSeeMore.place(x = 500, y = 27)
+                    self.MainProgram_GlobalFunctions("ResetScrollRegion", self.usersFavoritesCanvas)
         else:
             if page == "AllRecipes":
                 self.allRecipesNoRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
                 self.allRecipesNoRecipesFoundCard.pack(pady = 3)
                 self.allRecipesNoRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
-                self.allRecipesNoRecipesLabel.place(x = 200, y = 35)
+                self.allRecipesNoRecipesLabel.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+            elif page == "UsersRecipes":
+                self.usersRecipesNoRecipesFoundCard = Frame(self.usersRecipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.usersRecipesNoRecipesFoundCard.pack(pady = 3)
+                self.usersRecipesNoRecipesLabel = Label(self.usersRecipesSecondFrame, text = "Não foram encontradas receitas")
+                self.usersRecipesNoRecipesLabel.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+            elif page == "UsersFavorites":
+                self.usersFavoritesNoRecipesFoundCard = Frame(self.usersFavoritesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.usersFavoritesNoRecipesFoundCard.pack(pady = 3)
+                self.usersFavoritesNoRecipesLabel = Label(self.usersFavoritesSecondFrame, text = "Não tem receitas nos favoritos")
+                self.usersFavoritesNoRecipesLabel.place(relx = 0.5, rely = 0.5, anchor = CENTER)
 
 class Login:
     def __init__(self, master):

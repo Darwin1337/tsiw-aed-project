@@ -12,6 +12,7 @@ from functools import partial # Usado para acionar eventos com argumentos custom
 from PySide2 import QtWidgets, QtGui # Usado para centrar a janela no ecrã
 from PIL import ImageTk, Image # Usado para converter imagens em formato PGM/PPM
 from threading import Thread
+import json # remover isto
 import time
 
 # pip install cryptocode
@@ -411,13 +412,30 @@ class MainProgram:
             self.usersChageTypeButton=ttk.Button(self.usersLabelFrame, text="Alterar tipo", command=ChangeUserType)
             self.usersChageTypeButton.place(x=145, y=140)
 
+        def OpenLoadingScreen():
+            def StopLoadingScreenWindowClose(): pass
+
+            # [Initial configuration]
+            self.master.withdraw()
+            self.loadingScreen=Toplevel(self.master)
+            self.loadingScreen.geometry("250x100")
+            CenterWindow(self.loadingScreen)
+            self.loadingScreen.title("A carregar...")
+            self.loadingScreen.resizable(False, False)
+            self.loadingScreen.grab_set()
+            self.loadingScreen.protocol("WM_DELETE_WINDOW", StopLoadingScreenWindowClose)
+            self.loadingLabel = Label(self.loadingScreen, text = "A carregar receitas...")
+            self.loadingLabel.place(relx = 0.5, rely = 0.5, anchor = CENTER)
+
+        OpenLoadingScreen()
+        Thread(target=self.MainProgram_LoadRecipesToDictionary, args=()).start()
+
         # [Configuration] - Control variables
         self.hasUserGoneToPage0 = False
         self.hasUserGoneToPage1 = False
         self.hasUserGoneToPage2 = False
         self.hasUserGoneToPage3 = False
         self.hasUserGoneToPage4 = False
-        self.shouldRecipesBeLoaded = True
 
         UpdateFiltersList()
 
@@ -529,6 +547,120 @@ class MainProgram:
         self.tabControl.select(4)
         self.MainProgram_Notifications()
         self.tabControl.place(x = 200, y = -23)
+
+    def MainProgram_LoadRecipesToDictionary(self):
+        def AppendToGlobalDict(i):
+            self.data = {}
+            self.currDir = os.getcwd()
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["id"] = line.strip()
+
+            self.data["index"] = str(self.currentDictId)
+            self.currentDictId += 1
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\author.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["email"] = DecryptString(line.strip(), "auth")
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\name.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["titulo"] = DecryptString(line.strip(), "auth")
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\description.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["descricao"] = DecryptString(line.strip(), "auth")
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\procedure.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["procedimento"] = DecryptString(line.strip(), "auth")
+
+            self.data["ingredientes"] = []
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir+ "\\data\\recipes")[i] + "\\ingredients.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["ingredientes"].append(DecryptString(line.strip(), "auth"))
+
+            self.data["categorias"] = []
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\categories.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["categorias"].append(DecryptString(line.strip(), "auth"))
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\views\\nviews.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["views"] = line.strip()
+
+            # self.data["viewed_by"]
+            # with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\views\\whoviewed.txt", "r", encoding = "utf-8") as f:
+            #     for line in f:
+            #         if line.strip().replace(" ", ""):
+            #             self.data["viewed_by"].appendl(line.strip())
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\likes\\nlikes.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["likes"] = line.strip()
+
+            # self.data["liked_by"]
+            # with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\likes\\wholiked.txt", "r", encoding = "utf-8") as f:
+            #     for line in f:
+            #         if line.strip().replace(" ", ""):
+            #             self.data["liked_by"].appendl(line.strip())
+
+            self.data["rating"] = 0.0
+            self.auxSumRating, self.auxQuantRating = 0, 0
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.auxSumRating += int(line.split(";")[1])
+                        self.auxQuantRating += 1
+                    if self.auxQuantRating > 0: self.data["rating"] = float(self.auxSumRating / self.auxQuantRating)
+
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\time.txt", "r", encoding = "utf-8") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["tempo_confecao"] = line.strip()
+
+            self.data["data"] = "01/01/2021"
+            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
+                for line in f:
+                    if line.strip().replace(" ", ""):
+                        self.data["data"] = DecryptString(line, "auth")
+
+            self.data["path"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i]
+
+            self.data["imgpath"] = self.currDir + "\\data\\images\\default_recipes.jpg"
+            if os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"
+            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"
+            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"):
+                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"
+
+            self.globalRecipesDict["recipes"].append(self.data)
+
+        self.currentDictId = 0
+        self.globalRecipesDict = { "recipes":[] }
+        self.shouldTheNoRecipesCardBeDisplayed = False
+        if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
+            for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1, -1, -1):
+                if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                    if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
+                        if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
+                            AppendToGlobalDict(i)
+            with open(r'C:\Users\diogo\Desktop\dsad.json', 'w') as f:
+                f.write(json.dumps(self.globalRecipesDict))
+        else: self.shouldTheNoRecipesCardBeDisplayed = True
+        self.loadingScreen.destroy()
+        self.master.deiconify()
+        self.master.update()
 
     def MainProgram_EditProfile(self):
         def UpdateProfile():
@@ -753,7 +885,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.usersRecipesOrderByLabel = Label(self.usersRecipesFilterPanel, text = "Ordernar por:")
             self.usersRecipesOrderByLabel.place(x = 225, y = 55)
-            self.usersRecipesOrderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
+            self.usersRecipesOrderByList = ["Mais Recentes", "Mais Antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.usersRecipesOrderByDropdown = ttk.Combobox(self.usersRecipesFilterPanel, value = self.usersRecipesOrderByList, width = "25")
             self.usersRecipesOrderByDropdown.place(x = 228, y = 80)
             self.usersRecipesOrderByDropdown.current(0)
@@ -773,7 +905,7 @@ class MainProgram:
             self.usersRecipesPanel.place(x = 5, y = 150)
 
             # [Layout] - Create recipe button
-            self.usersCreateRecipeButton = Button(self.usersRecipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
+            self.usersCreateRecipeButton = Button(self.usersRecipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "UsersRecipes",  []))
             self.usersCreateRecipeButton.place(x = 140, y = 10)
 
             # [Layout] - Recipes frame
@@ -791,7 +923,7 @@ class MainProgram:
             for i in range(100):
                 Label(self.usersRecipesSecondFrame, text = "teste").pack()
 
-    def MainProgram_AllRecipesPage(self):
+    def MainProgram_AllRecipesPage(self, *args):
         if not self.hasUserGoneToPage2:
             self.hasUserGoneToPage2 = True
 
@@ -827,7 +959,7 @@ class MainProgram:
             # [Layout] - Order by filter
             self.orderByLabel = Label(self.filterPanel, text = "Ordernar por:")
             self.orderByLabel.place(x = 225, y = 55)
-            self.orderByList = ["Aleatório", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
+            self.orderByList = ["Mais Recentes", "Mais Antigos", "Mais vistos", "Menos vistos", "Mais gostados", "Menos gostados", "Maior rating", "Menor rating"]
             self.orderByDropdown = ttk.Combobox(self.filterPanel, value = self.orderByList, width = "25")
             self.orderByDropdown.place(x = 228, y = 80)
             self.orderByDropdown.current(0)
@@ -847,23 +979,10 @@ class MainProgram:
             self.recipesPanel.place(x = 5, y = 150)
 
             # [Layout] - Create recipe button
-            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = self.MainProgram_AddRecipe)
+            self.createRecipeButton = Button(self.recipesPanel, text = "Criar receita", relief = "groove", width = "50", height = "1", command = partial(self.MainProgram_AddRecipe, "AllRecipes", []))
             self.createRecipeButton.place(x = 140, y = 10)
 
-            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
-            self.recipesFrame.place(x = 5, y = 45)
-            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
-            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
-            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
-            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
-            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
-            self.recipesCanvas.bind('<Configure>', lambda e: self.recipesCanvas.configure(scrollregion = self.recipesCanvas.bbox("all")))
-            self.recipesCanvas.bind("<Configure>", partial(self.MainProgram_GlobalFunctions, "ResetScrollRegion", self.recipesCanvas))
-            self.recipesSecondFrame = Frame(self.recipesCanvas)
-            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
-
-            Thread(target=self.MainProgram_ShowRecipeCards, args=("AllRecipes",)).start()
-            #self.MainProgram_ShowRecipeCards("AllRecipes")
+            self.MainProgram_ShowRecipeCards("AllRecipes", "isto fica com os filtros")
 
     def MainProgram_Notifications(self):
         # if not self.hasUserGoneToPage4:
@@ -1010,29 +1129,33 @@ class MainProgram:
         def ResetScrollRegion(target):
             target.configure(scrollregion = target.bbox("all"))
 
+        def GetUserNameFromEmail(email):
+            returnName = ""
+            with open(os.getcwd() + "\\data\\user\\users_info.txt", "r") as f:
+                for line in f:
+                    if line.strip():
+                        if line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10] == EncryptSHA256(email):
+                            returnName = DecryptString(line.strip().split(";")[2], line.strip().split(";")[0][0:len(line.strip().split(";")[0]) - 10])
+            return returnName
+
         if func == "ClearFilters":
             ClearFilters(list(arg)[0])
         elif func == "ClearAllFilters":
             ClearAllFilters(list(arg)[0])
         elif func == "ResetScrollRegion":
             ResetScrollRegion(list(arg)[0])
+        elif func == "GetUserNameFromEmail":
+            return GetUserNameFromEmail(list(arg)[0])
 
-    def MainProgram_AddRecipe(self):
+    def MainProgram_AddRecipe(self, page, filters):
         self.newRecipeWindow = Toplevel(self.master)
-        self.app = Recipe(self.newRecipeWindow)
+        self.app = Recipe(self.newRecipeWindow, page, filters)
 
-    def MainProgram_ShowRecipeDetails(self, id = 0, path = "", page = ""):
+    def MainProgram_ShowRecipeDetails(self, id = 0, path = "", page = "", filters = []):
         def RecipeDetailsCustomClose():
             self.recipeDetailsWindow.destroy()
             self.master.update()
-            self.ClearWindowWidgets(self.tabUsersRecipes)
-            self.ClearWindowWidgets(self.tabAllRecipes)
-            self.ClearWindowWidgets(self.tabUsersFavourite)
-            self.hasUserGoneToPage1, self.hasUserGoneToPage2, self.hasUserGoneToPage3 = False, False, False
-            self.shouldRecipesBeLoaded = True
-            if page == "AllRecipes": self.MainProgram_AllRecipesPage()
-            elif page == "UserFavorites": pass
-            elif page == "UserRecipes": self.MainProgram_UsersRecipesPage()
+            self.MainProgram_ShowRecipeCards(page, filters)
 
         def VerifyUserLike():
             self.hasUserLikedThisRecipe = False
@@ -1085,6 +1208,7 @@ class MainProgram:
                     if line.strip().replace(" ", ""):
                         self.currentRecipeLikes = line.strip()
             self.likesLabel["text"] = "Likes: " + str(self.currentRecipeLikes)
+            self.globalRecipesDict["recipes"][int(id)]["likes"] = str(self.currentRecipeLikes)
 
         def VerifyUserFavorite():
             self.hasUserFavoritedThisRecipe = False
@@ -1145,6 +1269,7 @@ class MainProgram:
                         self.quantRatings += 1
                 if self.quantRatings > 0: self.averageRatingLabelVar = float(self.ratingsSum / self.quantRatings)
             self.averageRatingLabel["text"] = "Rating: " + str(float("{:.2f}".format(self.averageRatingLabelVar))) + " de 5.0"
+            self.globalRecipesDict["recipes"][int(id)]["rating"] = str(float("{:.2f}".format(self.averageRatingLabelVar)))
 
         def UpdateUserRating():
             self.userGivenRating = "Nenhuma"
@@ -1374,6 +1499,7 @@ class MainProgram:
                             self.viewsLabelVar = line
                 self.viewsLabel = Label(self.recipeStatistics, text = "Visualizações: " + str(self.viewsLabelVar))
                 self.viewsLabel.place(x = 10, y = 55)
+                self.globalRecipesDict["recipes"][int(id)]["views"] = str(self.viewsLabelVar)
 
                 # [Layout] - Recipe statistics - author
                 self.recipeAuthorEmailVar = ""
@@ -1382,7 +1508,7 @@ class MainProgram:
                     for line in f.readlines():
                         if line.strip().replace(" ", ""):
                             self.recipeAuthorEmailVar = DecryptString(line.split(";")[0], "auth")
-                            self.recipeAuthorNameVar = DecryptString(line.split(";")[1], "auth")
+                            self.recipeAuthorNameVar = self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.globalRecipesDict["recipes"][int(id)]["email"])
                 self.authorLabel = Label(self.recipeStatistics, text = "Criado por: " + str(self.recipeAuthorNameVar))
                 self.authorLabel.place(x = 245, y = 5)
 
@@ -1451,145 +1577,69 @@ class MainProgram:
     def MainProgram_EditRecipe(self):
         pass
 
-    def MainProgram_ShowRecipeCards(self, page):
-        def AppendToGlobalDict(i):
-            self.data = {}
-            self.currDir = os.getcwd()
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\id.txt", "r") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["id"] = line.strip()
+    def MainProgram_ShowRecipeCards(self, page, filters):
+        CreatePath()
+        if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+            messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+            os._exit(0)
 
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\author.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["email"] = DecryptString(line.strip().split(";")[0], "auth")
-                        self.data["nome"] = DecryptString(line.strip().split(";")[1], "auth")
+        if page == "AllRecipes":
+            try:
+                self.recipesFrame.destroy()
+                self.recipesCanvas.destroy()
+                self.recipesCanvasScrollbar.destroy()
+                self.recipesSecondFrame.destroy()
+            except: pass
 
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\name.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["titulo"] = DecryptString(line.strip(), "auth")
+            self.recipesFrame = Frame(self.recipesPanel, width = 625, height = 280)
+            self.recipesFrame.place(x = 5, y = 45)
+            self.recipesCanvas = Canvas(self.recipesFrame, width = 605)
+            self.recipesCanvas.pack(side = LEFT, fill = BOTH, expand = 1)
+            self.recipesCanvasScrollbar = ttk.Scrollbar(self.recipesFrame, orient = VERTICAL, command = self.recipesCanvas.yview)
+            self.recipesCanvasScrollbar.pack(side = RIGHT, fill = Y)
+            self.recipesCanvas.configure(yscrollcommand = self.recipesCanvasScrollbar.set)
+            self.recipesCanvas.bind("<Configure>", partial(self.MainProgram_GlobalFunctions, "ResetScrollRegion", self.recipesCanvas))
+            self.recipesSecondFrame = Frame(self.recipesCanvas)
+            self.recipesCanvas.create_window((0, 0), window = self.recipesSecondFrame, anchor = NW)
 
-            self.data["ingredientes"] = []
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir+ "\\data\\recipes")[i] + "\\ingredients.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["ingredientes"].append(DecryptString(line.strip(), "auth"))
-
-            self.data["categorias"] = []
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\categories.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["categorias"].append(DecryptString(line.strip(), "auth"))
-
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\views\\nviews.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["views"] = line.strip()
-
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\likes\\nlikes.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["likes"] = line.strip()
-
-            self.data["rating"] = 0.0
-            self.auxSumRating, self.auxQuantRating = 0, 0
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\rating.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.auxSumRating += int(line.split(";")[1])
-                        self.auxQuantRating += 1
-                    if self.auxQuantRating > 0: self.data["rating"] = float(self.auxSumRating / self.auxQuantRating)
-
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\time.txt", "r", encoding = "utf-8") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["tempo_confecao"] = line.strip()
-
-            self.data["data"] = "01/01/2021"
-            with open(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\date.txt", "r") as f:
-                for line in f:
-                    if line.strip().replace(" ", ""):
-                        self.data["data"] = DecryptString(line, "auth")
-
-            self.data["path"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i]
-
-            self.data["imgpath"] = self.currDir + "\\data\\images\\default_recipes.jpg"
-            if os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"):
-                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpg"
-            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"):
-                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.png"
-            elif os.path.exists(self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"):
-                self.data["imgpath"] = self.currDir + "\\data\\recipes\\" + os.listdir(self.currDir + "\\data\\recipes")[i] + "\\picture.jpeg"
-
-            self.recipesToBeDisplayed["recipes"].append(self.data)
-
-        if self.shouldRecipesBeLoaded:
-            if page == "AllRecipes":
-                self.allRecipesLoading = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                self.allRecipesLoading.pack(pady = 3)
-                self.allRecipesLoadingLabel = Label(self.recipesSecondFrame, text = "A carregar receitas")
-                self.allRecipesLoadingLabel.place(relx=0.5, rely=0.5, anchor=CENTER)
-
-            self.shouldRecipesBeLoaded = False
-            self.recipesToBeDisplayed = { "recipes":[] }
-            self.shouldTheNoRecipesCardBeDisplayed = False
-            if len(os.listdir(os.getcwd() + "\\data\\recipes")) > 0:
-                for i in range(len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1, -1, -1):
-                    if os.path.isdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                        if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
-                            if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
-                                AppendToGlobalDict(i)
-            else: self.shouldTheNoRecipesCardBeDisplayed = True
-            self.allRecipesLoading.destroy()
-            self.MainProgram_ShowRecipeCards(page)
-        else:
-
-            CreatePath()
-            if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
-                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
-                os._exit(0)
-
-            if len(self.recipesToBeDisplayed["recipes"]) > 0:
-                for i in range(len(self.recipesToBeDisplayed["recipes"])):
-                    if page == "AllRecipes":
-                        self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                        self.allRecipesCard.pack(pady = 3)
-                        self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
-                        self.allRecipesPictureCanvas.place(x = 10, y = 5)
-                        self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.recipesToBeDisplayed["recipes"][i]["imgpath"]).resize((65, 65)))
-                        self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
-                        self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.recipesToBeDisplayed["recipes"][i]["titulo"])
-                        self.allRecipesName.place(x = 90, y = 5)
-                        self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.recipesToBeDisplayed["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
-                        self.allRecipesTime.place(x = 90, y = 30)
-                        self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.recipesToBeDisplayed["recipes"][i]["likes"])
-                        self.allRecipesLikes.place(x = 90, y = 55)
-                        self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.recipesToBeDisplayed["recipes"][i]["rating"]))
-                        self.allRecipesRating.place(x = 150, y = 55)
-                        self.allRecipesDateTimeObject = datetime.datetime.strptime(self.recipesToBeDisplayed["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
-                        self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.recipesToBeDisplayed["recipes"][i]["nome"] + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
-                        self.allRecipesCreator.place(x = 220, y = 55)
-                        if self.loggedInUserInformation[3] == "administrator":
-                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"], "AllRecipes"))
-                            self.allRecipesSeeMore.place(x = 450, y = 27)
-                            self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
-                            self.allRecipesEdit.place(x = 520, y = 10)
-                            self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
-                            self.allRecipesRemove.place(x = 520, y = 39)
-                        else:
-                            self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.recipesToBeDisplayed["recipes"][i]["id"], self.recipesToBeDisplayed["recipes"][i]["path"], "AllRecipes"))
-                            self.allRecipesSeeMore.place(x = 500, y = 27)
-                        self.MainProgram_GlobalFunctions("ResetScrollRegion", self.recipesCanvas)
-            else: self.shouldTheNoRecipesCardBeDisplayed = True
-
-            if self.shouldTheNoRecipesCardBeDisplayed:
+        # Show recipes
+        if not self.shouldTheNoRecipesCardBeDisplayed:
+            for i in range(len(self.globalRecipesDict["recipes"])):
                 if page == "AllRecipes":
-                    self.allRecipesNoRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
-                    self.allRecipesNoRecipesFoundCard.pack(pady = 3)
-                    self.allRecipesNoRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
-                    self.allRecipesNoRecipesLabel.place(x = 200, y = 35)
+                    self.allRecipesCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                    self.allRecipesCard.pack(pady = 3)
+                    self.allRecipesPictureCanvas = Canvas(self.allRecipesCard, width = "65", height = "65")
+                    self.allRecipesPictureCanvas.place(x = 10, y = 5)
+                    self.allRecipesPictureCanvas.image = ImageTk.PhotoImage(Image.open(self.globalRecipesDict["recipes"][i]["imgpath"]).resize((65, 65)))
+                    self.allRecipesPictureCanvas.create_image(32.5, 32.5, image = self.allRecipesPictureCanvas.image, anchor = CENTER)
+                    self.allRecipesName = Label(self.allRecipesCard, text = "Título: " + self.globalRecipesDict["recipes"][i]["titulo"])
+                    self.allRecipesName.place(x = 90, y = 5)
+                    self.allRecipesTime = Label(self.allRecipesCard, text = "Tempo de confeção: " + self.globalRecipesDict["recipes"][i]["tempo_confecao"].split(";")[0] + "h " + self.globalRecipesDict["recipes"][i]["tempo_confecao"].split(";")[1] + "min")
+                    self.allRecipesTime.place(x = 90, y = 30)
+                    self.allRecipesLikes = Label(self.allRecipesCard, text = "Likes: " + self.globalRecipesDict["recipes"][i]["likes"])
+                    self.allRecipesLikes.place(x = 90, y = 55)
+                    self.allRecipesRating = Label(self.allRecipesCard, text = "Rating: " + str(self.globalRecipesDict["recipes"][i]["rating"]))
+                    self.allRecipesRating.place(x = 150, y = 55)
+                    self.allRecipesDateTimeObject = datetime.datetime.strptime(self.globalRecipesDict["recipes"][i]["data"], '%Y-%m-%d %H:%M:%S.%f')
+                    self.allRecipesCreator = Label(self.allRecipesCard, text = "Criado por: " + self.MainProgram_GlobalFunctions("GetUserNameFromEmail", self.globalRecipesDict["recipes"][i]["email"]) + ", " + str(self.allRecipesDateTimeObject.strftime("%d/%m/%Y")))
+                    self.allRecipesCreator.place(x = 220, y = 55)
+                    if self.loggedInUserInformation[3] == "administrator":
+                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))
+                        self.allRecipesSeeMore.place(x = 450, y = 27)
+                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
+                        self.allRecipesEdit.place(x = 520, y = 10)
+                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
+                        self.allRecipesRemove.place(x = 520, y = 39)
+                    else:
+                        self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))
+                        self.allRecipesSeeMore.place(x = 500, y = 27)
+                    self.MainProgram_GlobalFunctions("ResetScrollRegion", self.recipesCanvas)
+        else:
+            if page == "AllRecipes":
+                self.allRecipesNoRecipesFoundCard = Frame(self.recipesSecondFrame, width = "590", height = "80", highlightbackground = "black", highlightthickness = 1)
+                self.allRecipesNoRecipesFoundCard.pack(pady = 3)
+                self.allRecipesNoRecipesLabel = Label(self.recipesSecondFrame, text = "Não foram encontradas receitas")
+                self.allRecipesNoRecipesLabel.place(x = 200, y = 35)
 
 class Login:
     def __init__(self, master):
@@ -1862,7 +1912,7 @@ class Register:
         app.newWindow.deiconify()
 
 class Recipe:
-    def __init__(self, master):
+    def __init__(self, master, page, filters):
         def NewRecipeCustomClose():
             self.master.destroy()
             app.master.update()
@@ -1923,6 +1973,8 @@ class Recipe:
         self.master.grab_set()
         self.master.focus_force()
         self.master.protocol("WM_DELETE_WINDOW", NewRecipeCustomClose)
+        self.page = page
+        self.filters = filters
 
         # [Layout] - Recipe general information fieldset
         self.generalInformationLabelFrame = LabelFrame(self.master, text = "Informação Geral", width = "490", height = "280", bd = "2")
@@ -2099,7 +2151,7 @@ class Recipe:
         except:
             messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.master)
 
-    def SaveNewRecipe(self, event = None):
+    def SaveNewRecipe(self, event = None, page = "", filters = []):
         if str(self.recipeNameText.get()).replace(" ", ""):
             if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(str(self.recipeNameText.get()).replace(" ", "")):
                 if len(str(self.recipeNameText.get()).replace(" ", "")) > 10:
@@ -2139,6 +2191,23 @@ class Recipe:
                                                                             if i == (len(os.listdir(os.getcwd() + "\\data\\recipes")) - 1) and not self.wasAnyIdFound:
                                                                                 self.savedRecipeID = 1
                                                                 else: self.savedRecipeID = 1
+                                                                self.newRecipe = {}
+                                                                self.newRecipe["id"] = self.savedRecipeID
+                                                                self.newRecipe["index"] = str(app.currentDictId)
+                                                                app.currentDictId += 1
+                                                                self.newRecipe["email"] = app.loggedInUserInformation[1]
+                                                                self.newRecipe["titulo"] = str(self.recipeNameText.get())
+                                                                self.newRecipe["descricao"] = str(self.recipeDescriptionText.get("1.0", END)).strip()
+                                                                self.newRecipe["procedimento"] = str(self.recipeProcedureText.get("1.0", END)).strip()
+                                                                self.newRecipe["ingredientes"] = []
+                                                                self.newRecipe["categorias"] = []
+                                                                self.newRecipe["views"] = "0"
+                                                                self.newRecipe["likes"] = "0"
+                                                                self.newRecipe["rating"] = 0.0
+                                                                self.newRecipe["tempo_confecao"] = str(self.recipeHoursSpinbox.get()) + ";" + str(self.recipeMinutesSpinbox.get())
+                                                                self.newRecipe["data"] = str(datetime.datetime.now())
+                                                                self.newRecipe["path"] = os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID)
+                                                                self.newRecipe["imgpath"] = os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\picture" + os.path.splitext(self.recipePictureCanvas.imgpath)[1]
                                                                 os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID))
                                                                 os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\comments")
                                                                 os.mkdir(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\views")
@@ -2154,7 +2223,7 @@ class Recipe:
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\id.txt", "w") as f:
                                                                     f.write(str(self.savedRecipeID))
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\author.txt", "w") as f:
-                                                                    f.write(EncryptString(app.loggedInUserInformation[1], "auth") + ";" + EncryptString(app.loggedInUserInformation[2], "auth"))
+                                                                    f.write(EncryptString(app.loggedInUserInformation[1], "auth"))
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\date.txt", "w") as f:
                                                                     f.write(EncryptString(str(datetime.datetime.now()), "auth"))
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\name.txt", "w") as f:
@@ -2163,11 +2232,13 @@ class Recipe:
                                                                     f.write(EncryptString(str(self.recipeDescriptionText.get("1.0", END)), "auth"))
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\ingredients.txt", "w") as f:
                                                                     for i in range(self.listboxRecipeIngredients.size()):
+                                                                        self.newRecipe["ingredientes"].append(self.listboxRecipeIngredients.get(i))
                                                                         f.write(EncryptString(self.listboxRecipeIngredients.get(i), "auth") + "\n")
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\procedure.txt", "w") as f:
                                                                     f.write(EncryptString(str(self.recipeProcedureText.get("1.0", END)), "auth"))
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\categories.txt", "w") as f:
                                                                     for i in range(self.listboxRecipeCategories.size()):
+                                                                        self.newRecipe["categorias"].append(self.listboxRecipeCategories.get(i))
                                                                         f.write(EncryptString(self.listboxRecipeCategories.get(i), "auth") + "\n")
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\rating.txt", "w") as f:
                                                                     pass
@@ -2175,11 +2246,12 @@ class Recipe:
                                                                     pass
                                                                 with open(os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\time.txt", "w") as f:
                                                                     f.write(str(self.recipeHoursSpinbox.get()) + ";" + str(self.recipeMinutesSpinbox.get()))
+                                                                app.globalRecipesDict["recipes"].append(self.newRecipe)
                                                                 shutil.copy2(self.recipePictureCanvas.imgpath, os.getcwd() + "\\data\\recipes\\recipe-id-" + str(self.savedRecipeID) + "\\picture" + os.path.splitext(self.recipePictureCanvas.imgpath)[1])
                                                                 messagebox.showinfo("Sucesso", "A receita foi criada com sucesso", parent = self.master)
                                                                 self.master.destroy()
                                                                 app.master.update()
-                                                                app.MainProgram_ShowRecipeCards("AllRecipes")
+                                                                app.MainProgram_ShowRecipeCards(self.page, self.filters)
                                                         else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.master)
                                                 else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 1250 caracteres", parent = self.master)
                                             else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.master)

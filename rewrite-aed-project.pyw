@@ -655,8 +655,6 @@ class MainProgram:
                     if "-" in str(os.listdir(os.getcwd() + "\\data\\recipes")[i]):
                         if len(os.listdir(os.getcwd() + "\\data\\recipes\\" + os.listdir(os.getcwd() + "\\data\\recipes")[i])) > 0:
                             AppendToGlobalDict(i)
-            with open(r'C:\Users\diogo\Desktop\dsad.json', 'w') as f:
-                f.write(json.dumps(self.globalRecipesDict))
         else: self.shouldTheNoRecipesCardBeDisplayed = True
         self.loadingScreen.destroy()
         self.master.deiconify()
@@ -1574,14 +1572,312 @@ class MainProgram:
                 # messagebox.showerror("Erro", "Ocorreu um erro i nesperado\nO programa vai fechar", parent = self.master)
                 # os._exit(0)
 
-    def MainProgram_EditRecipe(self):
-        pass
+    def MainProgram_EditRecipe(self, id, page, filters = []):
+        def SelectRecipeImageEdit():
+            self.pathImageRecipeEdit = filedialog.askopenfilename(filetypes=[("Imagem", ".jpg .jpeg .png")])
+            if self.pathImageRecipeEdit:
+                try:
+                    Image.open(self.pathImageRecipeEdit).verify()
+                    self.recipeImageCheck = True
+                except: messagebox.showerror("Erro", "Ocorreu um erro ao tentar ler a imagem", parent = self.editRecipe)
+                if self.recipeImageCheck:
+                    try:
+                        if Image.open(self.pathImageRecipeEdit).size[0] >= 100:
+                            if Image.open(self.pathImageRecipeEdit).size[1] >= 100:
+                                if os.stat(self.pathImageRecipeEdit).st_size <= 5000000:
+                                    self.recipePictureCanvasEdit.imgpath = self.pathImageRecipeEdit
+                                    self.recipePictureCanvasEdit.image = ImageTk.PhotoImage(Image.open(self.recipePictureCanvasEdit.imgpath).resize((100, 100)))
+                                    self.recipePictureCanvasEdit.create_image(50, 50, image = self.recipePictureCanvasEdit.image, anchor = CENTER)
+                                else: messagebox.showerror("Erro", "O tamanho da imagem é superior a 5mb", parent = self.editRecipe)
+                            else: messagebox.showerror("Erro", "A altura da imagem é inferior a 100px", parent = self.editRecipe)
+                        else: messagebox.showerror("Erro", "A largura da imagem é inferior a 100px", parent = self.editRecipe)
+                    except IOError: messagebox.showerror("Erro", "Ocorreu um erro a copiar a imagem para o sistema", parent = self.editRecipe)
+                    except: messagebox.showerror("Erro", "Ocorreu um erro desconhecido", parent = self.editRecipe)
 
-    def MainProgram_ShowRecipeCards(self, page, filters):
+        def AddNewIngredientEdit():
+            def AddIngredient():
+                if self.listboxRecipeIngredientsEdit.size() < 30:
+                    if str(self.recipeIngredientsTextEdit.get()).replace(" ", ""):
+                        if len(str(self.recipeIngredientsTextEdit.get()).replace(" ", "")) > 2:
+                            self.listboxRecipeIngredientsEdit.insert(END, str(self.recipeIngredientsTextEdit.get()))
+                            self.editNewIngredientWindow.destroy()
+                            self.master.update()
+                            self.master.grab_set()
+                        else: messagebox.showerror("Erro", "O campo de ingrediente tem de ter, pelo menos, 3 caracteres", parent = self.editNewIngredientWindow)
+                    else: messagebox.showerror("Erro", "Introduza algum ingrediente", parent = self.editNewIngredientWindow)
+                else: messagebox.showerror("Erro", "Atingiu o limite máximo de ingredientes (30)", parent = self.editNewIngredientWindow)
+
+            def AddNewIngredientCustomClose():
+                self.editNewIngredientWindow.destroy()
+                self.master.update()
+                self.master.grab_set()
+
+            # [Layout] - Add ingredient window
+            self.editNewIngredientWindow = Toplevel(self.master)
+            self.editNewIngredientWindow.geometry("250x100")
+            CenterWindow(self.editNewIngredientWindow)
+            self.editNewIngredientWindow.title("Adicionar Ingrediente")
+            self.editNewIngredientWindow.resizable(False, False)
+            self.editNewIngredientWindow.grab_set()
+            self.editNewIngredientWindow.protocol("WM_DELETE_WINDOW", AddNewIngredientCustomClose)
+
+            # [Layout] - Add new ingredient textbox
+            self.recipeIngredientsLabelEdit = Label(self.editNewIngredientWindow, text = "Nome do ingrediente:")
+            self.recipeIngredientsLabelEdit.place(x = 60, y = 10)
+            self.recipeIngredientsTextEdit = Entry(self.editNewIngredientWindow, width = 35)
+            self.recipeIngredientsTextEdit.place(x = 18, y = 35)
+            self.recipeIngredientsTextEdit.focus_force()
+
+            # [Layout] - Add new ingredient button
+            self.recipeIngredientsButton = ttk.Button(self.editNewIngredientWindow, text = "Adicionar", command = AddIngredient)
+            self.recipeIngredientsButton.place(x = 85, y = 65)
+
+        def RemoveIngredientEdit():
+            try:
+                self.selectedIngredientEdit = self.listboxRecipeIngredientsEdit.curselection()[0]
+                self.listboxRecipeIngredientsEdit.delete(self.selectedIngredientEdit)
+            except:
+                messagebox.showerror("Erro", "Selecione um ingrediente para remover", parent = self.editRecipe)
+
+        def AddCategory():
+            def AddCategoryToList():
+                # Verify if category has already been chosen
+                self.wasCategoryAlreadyChosen = False
+                for i in range(self.listboxRecipeCategoriesEdit.size()):
+                    if self.selectNewCategoryDropdownEdit.get() == self.listboxRecipeCategoriesEdit.get(i):
+                        self.wasCategoryAlreadyChosen = True
+                        break
+                if not self.wasCategoryAlreadyChosen:
+                    self.listboxRecipeCategoriesEdit.insert(END, self.selectNewCategoryDropdownEdit.get())
+                    AddCategoryCustomClose()
+                else:
+                    messagebox.showerror("Erro", "A categoria selecionada já foi escolhida", parent = self.addCategoryWindowEdit)
+
+            def AddCategoryCustomClose():
+                self.addCategoryWindowEdit.destroy()
+                self.master.update()
+                self.master.grab_set()
+
+            # [Initial configuration]
+            self.addCategoryWindowEdit = Toplevel(self.master)
+            self.addCategoryWindowEdit.geometry("250x100")
+            CenterWindow(self.addCategoryWindowEdit)
+            self.addCategoryWindowEdit.title("Adicionar Categoria")
+            self.addCategoryWindowEdit.resizable(False, False)
+            self.addCategoryWindowEdit.grab_set()
+            self.addCategoryWindowEdit.focus_force()
+            self.addCategoryWindowEdit.protocol("WM_DELETE_WINDOW", AddCategoryCustomClose)
+
+            # [Layout] - Category select box
+            self.selectNewCategoryLabelEdit = Label(self.addCategoryWindowEdit, text = "Categoria:")
+            self.selectNewCategoryLabelEdit.place(x = 90, y = 5)
+            self.selectNewCategoryDropdownEdit = ttk.Combobox(self.addCategoryWindowEdit, value = self.globalCategoriesList, width = "25")
+            self.selectNewCategoryDropdownEdit.place(x = 40, y = 40)
+            self.selectNewCategoryDropdownEdit.current(0)
+
+            # [Layout] - Add category button
+            self.addNewCategoryButtonEdit = ttk.Button(self.addCategoryWindowEdit, text = "Adicionar", command = AddCategoryToList)
+            self.addNewCategoryButtonEdit.place(x = 85, y = 65)
+
+        def RemoveCategory():
+            try:
+                self.selectedCategory = self.listboxRecipeCategoriesEdit.curselection()[0]
+                self.listboxRecipeCategoriesEdit.delete(self.selectedCategory)
+            except:
+                messagebox.showerror("Erro", "Selecione uma categoria para remover", parent = self.editRecipe)
+
+        def EditRecipeCustomClose():
+            self.editRecipe.destroy()
+            app.master.update()
+
+        def EditAllRecipe():
+            if str(self.recipeNameTextEdit.get()).replace(" ", ""):
+                if re.compile(r"^[^\W\d_]+(-[^\W\d_]+)?$", re.U).match(str(self.recipeNameTextEdit.get()).replace(" ", "")):
+                    if len(str(self.recipeNameTextEdit.get()).replace(" ", "")) > 10:
+                        if len(str(self.recipeNameTextEdit.get()).replace(" ", "")) <= 50:
+                            if str(self.recipeDescriptionTextEdit.get("1.0", END)).strip().replace(" ", ""):
+                                if len(str(self.recipeDescriptionTextEdit.get("1.0", END)).replace(" ", "")) > 20:
+                                    if len(str(self.recipeDescriptionTextEdit.get("1.0", END)).replace(" ", "")) <= 255:
+                                        if self.listboxRecipeIngredientsEdit.size() > 0:
+                                            if str(self.recipeProcedureTextEdit.get("1.0", END)).strip().replace(" ", ""):
+                                                if len(str(self.recipeProcedureTextEdit.get("1.0", END)).replace(" ", "")) > 20:
+                                                    if len(str(self.recipeProcedureTextEdit.get("1.0", END)).replace(" ", "")) <= 1250:
+                                                        if str(self.recipeHoursSpinboxEdit.get()) == "0" and str(self.recipeMinutesSpinboxEdit.get()) == "0":
+                                                            messagebox.showerror("Erro", "O tempo de confeção é inválido", parent = self.editRecipe)
+                                                        else:
+                                                            if self.listboxRecipeCategoriesEdit.size() > 0:
+                                                                self.doesUserWantToContinueRecipePictureEdit = True
+                                                                if self.recipePictureCanvasEdit.imgpath.split("\\")[-1] == "default_recipes.jpg":
+                                                                    self.continueDefaultRecipeEdit = messagebox.askquestion ("Efetuar registo", "Não selecionou nenhuma foto de receita, se continuar irá ser selecionada a foto de receita padrão, prosseguir?", icon = "warning", parent = self.master)
+                                                                    if self.continueDefaultRecipeEdit == "no":
+                                                                        self.doesUserWantToContinueRecipePictureEdit = False
+                                                                    else:
+                                                                        if MD5Checksum(2) != "8b53223e6b0ba3a1564ef2a5397bb03e":
+                                                                            messagebox.showerror("Erro", "A foto de receita padrão não foi reconhecida\nO programa irá fechar", parent = self.editRecipe)
+                                                                            os._exit(0)
+                                                                if self.doesUserWantToContinueRecipePictureEdit:
+                                                                    pass
+                                                            else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 categoria", parent = self.editRecipe)
+                                                    else: messagebox.showerror("Erro", "O campo de procedimentos da receita não pode exceder os 1250 caracteres", parent = self.editRecipe)
+                                                else: messagebox.showerror("Erro", "O campo de procedimentos da receita tem de ter, pelo menos, 20 caracteres", parent = self.editRecipe)
+                                            else: messagebox.showerror("Erro", "O campo de procedimenos da receita é obrigatório", parent = self.editRecipe)
+                                        else: messagebox.showerror("Erro", "A receita tem de ter, pelo menos, 1 ingrediente", parent = self.editRecipe)
+                                    else: messagebox.showerror("Erro", "O campo de descrição da receita não pode exceder os 255 caracteres", parent = self.editRecipe)
+                                else: messagebox.showerror("Erro", "O campo de descrição da receita tem de ter, pelo menos, 20 caracteres", parent = self.editRecipe)
+                            else: messagebox.showerror("Erro", "O campo de descrição da receita é obrigatório", parent = self.editRecipe)
+                        else: messagebox.showerror("Erro", "O campo de nome da receita não pode exceder os 50 caracteres", parent = self.editRecipe)
+                    else: messagebox.showerror("Erro", "O campo de nome da receita tem de ter, pelo menos, 10 caracteres", parent = self.editRecipe)
+                else: messagebox.showerror("Erro", "O campo de nome da receita não pode conter caracteres especiais nem números", parent = self.editRecipe)
+            else: messagebox.showerror("Erro", "O campo de nome da receita é obrigatório", parent = self.editRecipe)
+
+        self.editRecipe=Toplevel(self.master)
+        self.editRecipe.geometry("500x780")
+        CenterWindow(self.editRecipe)
+        self.editRecipe.title("Editar receita")
+        self.editRecipe.resizable(False, False)
+        self.editRecipe.grab_set()
+        self.editRecipe.focus_force()
+        self.editRecipe.protocol("WM_DELETE_WINDOW", EditRecipeCustomClose)
+
+        # [Layout] - Recipe general information fieldset
+        self.generalInformationLabelFrame = LabelFrame(self.editRecipe, text = "Informação Geral", width = "490", height = "280", bd = "2")
+        self.generalInformationLabelFrame.place(x = 5, y = 5)
+
+        # [Layout] - Recipe name
+        self.recipeNameLabelEdit = Label(self.generalInformationLabelFrame, text = "Nome da receita:")
+        self.recipeNameLabelEdit.place(x = 130, y = 35, anchor = E)
+        self.recipeNameTextEdit = Entry(self.generalInformationLabelFrame, width = "45")
+        self.recipeNameTextEdit.place(x = 150, y = 37.5, anchor = W)
+        self.recipeNameTextEdit.insert(END, self.globalRecipesDict["recipes"][int(id)]["titulo"])
+
+        # [Layout] - Recipe description
+        self.recipeDescriptionLabelEdit = Label(self.generalInformationLabelFrame, text = "Descrição da receita:")
+        self.recipeDescriptionLabelEdit.place(x = 130, y = 70, anchor = E)
+        self.recipeDescriptionTextEdit = Text(self.generalInformationLabelFrame, height = "4", width = "45", wrap = WORD, font = ('TkDefaultFont'))
+        self.recipeDescriptionTextEdit.place(x = 150, y = 97.5, anchor = W)
+        self.recipeDescriptionTextEdit.insert(END, self.globalRecipesDict["recipes"][int(id)]["descricao"])
+
+        # [Layout] - Recipe picture
+        self.labelSelectRecipeImage = Label(self.generalInformationLabelFrame, text = "Foto do prato:")
+        self.labelSelectRecipeImage.place(x = 130, y = 155, anchor = E)
+        self.recipePictureCanvasEdit = Canvas(self.generalInformationLabelFrame, width = "100", height = "100")
+        self.recipePictureCanvasEdit.place(x = 150, y = 200, anchor = W)
+        
+        try:
+            self.recipePictureCanvasEdit.imgpath = self.globalRecipesDict["recipes"][int(id)]["imgpath"]
+            self.recipePictureCanvasEdit.image = ImageTk.PhotoImage(Image.open(self.recipePictureCanvasEdit.imgpath).resize((100, 100)))
+        except:
+            CreatePath()
+            if str(MD5Checksum(2)) == "8b53223e6b0ba3a1564ef2a5397bb03e":
+                self.recipePictureCanvasEdit.imgpath = os.getcwd() + "\\data\\images\\default_recipes.jpg"
+                self.recipePictureCanvasEdit.image = ImageTk.PhotoImage(Image.open(self.recipePictureCanvasEdit.imgpath).resize((100, 100)))
+            else:
+                messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
+                os._exit(0)
+
+        self.recipePictureCanvasEdit.create_image(0, 0, image = self.recipePictureCanvasEdit.image, anchor = NW)
+        self.selectRecipeImageButtonEdit = ttk.Button(self.generalInformationLabelFrame, text = "Enviar imagem", command = SelectRecipeImageEdit)
+        self.selectRecipeImageButtonEdit.place(x = 265, y = 164, anchor = W, width = 117)
+        self.selectRecipeImageInfoEdit = Label(self.generalInformationLabelFrame, text = ".jpg .jpeg ou .png", wraplength = 200, justify = LEFT, font=(None, 8))
+        self.selectRecipeImageInfoEdit.place(x = 265, y = 195, anchor = W)
+        self.selectRecipeImageInfo2 = Label(self.generalInformationLabelFrame, text = "Atenção: Nem a largura nem a altura da imagem devem ser inferiores a 100px", wraplength = 150, justify = LEFT, font=(None, 8))
+        self.selectRecipeImageInfo2.place(x = 265, y = 230, anchor = W)
+
+        # [Layout] - Recipe ingredients fieldset
+        self.ingredientsLabelFrameEdit = LabelFrame(self.editRecipe, text = "Ingredientes", width = "490", height = "130", bd = "2")
+        self.ingredientsLabelFrameEdit.place(x = 5, y = 290)
+
+        # [Layout] - Recipe ingredients
+        self.recipeIngredientsLabelEdit = Label(self.ingredientsLabelFrameEdit, text = "Lista de ingredientes:")
+        self.recipeIngredientsLabelEdit.place(x = 130, y = 20, anchor = E)
+
+        # [Layout] - Ingredients list
+        self.listboxRecipeIngredientsEdit = Listbox(self.ingredientsLabelFrameEdit, height = "5", width = "46")
+        self.listboxRecipeIngredientsEdit.place(x = 149, y = 58, anchor = W)
+        for i in range(len(self.globalRecipesDict["recipes"][int(id)]["ingredientes"])):
+            self.listboxRecipeIngredientsEdit.insert(END, self.globalRecipesDict["recipes"][int(id)]["ingredientes"][i])
+
+        # [Layout] - Add ingredients button
+        self.addRecipeIngredientsEdit = ttk.Button(self.ingredientsLabelFrameEdit, text = "Adicionar", width = "17", command = AddNewIngredientEdit)
+        self.addRecipeIngredientsEdit.place(x = 15, y = 40)
+
+        # [Layout] - Remove ingredients button
+        self.removeRecipeIngredientsEdit = ttk.Button(self.ingredientsLabelFrameEdit, text = "Remover", width = "17", command = RemoveIngredientEdit)
+        self.removeRecipeIngredientsEdit.place(x = 15, y = 72)
+
+        # [Layout] - Recipe procedure fieldset
+        self.recipeProcedureLabelFrameEdit = LabelFrame(self.editRecipe, text = "Confeção", width = "490", height = "160", bd = "2")
+        self.recipeProcedureLabelFrameEdit.place(x = 5, y = 425)
+
+        # [Layout] - Recipe procedure textbox
+        self.recipeProcedureLabelEdit = Label(self.recipeProcedureLabelFrameEdit, text = "Procedimentos:")
+        self.recipeProcedureLabelEdit.place(x = 130, y = 20, anchor = E)
+        self.recipeProcedureTextEdit = Text(self.recipeProcedureLabelFrameEdit, height = "4", width = "45", wrap = WORD, font = ('TkDefaultFont'))
+        self.recipeProcedureTextEdit.place(x = 150, y = 47.5, anchor = W)
+        self.recipeProcedureTextEdit.insert(END, self.globalRecipesDict["recipes"][int(id)]["procedimento"])
+
+        # [Layout] - Recipe time textbox
+        self.recipeTimeLabelEdit = Label(self.recipeProcedureLabelFrameEdit, text = "Tempo de confeção:")
+        self.recipeTimeLabelEdit.place(x = 130, y = 110, anchor = E)
+
+        # [Layout] - Recipe time textbox - hours
+        self.recipeHoursLabelEdit = Label(self.recipeProcedureLabelFrameEdit, text = "Horas:")
+        self.recipeHoursLabelEdit.place(x = 190, y = 110, anchor = E)
+        self.recipeHoursSpinboxEdit = Spinbox(self.recipeProcedureLabelFrameEdit, from_ = 0, to = 24, width = 3)
+        self.recipeHoursSpinboxEdit.place(x = 200 , y = 102.5)
+        self.recipeHoursSpinboxEdit.delete(0,END)
+        self.recipeHoursSpinboxEdit.insert(END, int(self.globalRecipesDict["recipes"][int(id)]["tempo_confecao"].split(";")[0]))
+
+        # [Layout] - Recipe time textbox - minutes
+        self.recipeMinutesLabelEdit = Label(self.recipeProcedureLabelFrameEdit, text = "Minutos:")
+        self.recipeMinutesLabelEdit.place(x = 310, y = 110, anchor = E)
+        self.recipeMinutesSpinboxEdit = Spinbox(self.recipeProcedureLabelFrameEdit, from_ = 0, to = 59, width = 3)
+        self.recipeMinutesSpinboxEdit.place(x = 320 , y = 102.5)
+        self.recipeMinutesSpinboxEdit.delete(0,END)
+        self.recipeMinutesSpinboxEdit.insert(END, int(self.globalRecipesDict["recipes"][int(id)]["tempo_confecao"].split(";")[1]))
+
+        # [Layout] - Recipe category fieldset
+        self.recipeCategoryLabelFrameEdit = LabelFrame(self.editRecipe, text = "Categorias", width = "490", height = "130", bd = "2")
+        self.recipeCategoryLabelFrameEdit.place(x = 5, y = 590)
+
+        # [Layout] - Recipe category textbox
+        self.recipeCategoryLabelEdit = Label(self.recipeCategoryLabelFrameEdit, text = "Categorias:")
+        self.recipeCategoryLabelEdit.place(x = 130, y = 20, anchor = E)
+
+        # [Layout] - Recipe categories list
+        self.listboxRecipeCategoriesEdit = Listbox(self.recipeCategoryLabelFrameEdit, height = "5", width = "46")
+        self.listboxRecipeCategoriesEdit.place(x = 149, y = 58, anchor = W)
+        for i in range(len(self.globalRecipesDict["recipes"][int(id)]["categorias"])):
+            self.listboxRecipeCategoriesEdit.insert(END, self.globalRecipesDict["recipes"][int(id)]["categorias"][i])
+
+        # [Layout] - Add categories button
+        self.recipeAddCategoryEdit = ttk.Button(self.recipeCategoryLabelFrameEdit, text = "Adicionar", width = "17", command = AddCategory)
+        self.recipeAddCategoryEdit.place(x = 15, y = 40)
+
+        # [Layout] - Remove categories button
+        self.recipeRemoveCategoryEdit = ttk.Button(self.recipeCategoryLabelFrameEdit, text = "Remover", width = "17", command = RemoveCategory)
+        self.recipeRemoveCategoryEdit.place(x = 15, y = 72)
+
+        # [Layout] - Add recipe button
+        self.editRecipeButton = Button(self.editRecipe, text = "Editar", relief = "groove", width = "20", height = "2", command = EditAllRecipe)
+        self.editRecipeButton.place(x = 175, y = 730)
+
         CreatePath()
         if str(MD5Checksum(2)) != "8b53223e6b0ba3a1564ef2a5397bb03e":
             messagebox.showerror("Erro", "A foto padrão das receitas não foi reconhecida\nO programa irá fechar", parent = self.master)
             os._exit(0)
+
+    def MainProgram_ShowRecipeCards(self, page, filters):
+
+        def RemoveRecipe(path):
+            self.messageBoxAnswer = messagebox.askquestion("Eliminar", "Tem a certeza que pretende eliminar a receita?", icon = 'warning')
+            if self.messageBoxAnswer=="yes":
+                shutil.rmtree(path)
+                ##Eliminar do dicionario!!
+                self.MainProgram_ShowRecipeCards(page, filters)
+
+            else:
+                pass
 
         if page == "AllRecipes":
             try:
@@ -1626,9 +1922,9 @@ class MainProgram:
                     if self.loggedInUserInformation[3] == "administrator":
                         self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))
                         self.allRecipesSeeMore.place(x = 450, y = 27)
-                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7)
+                        self.allRecipesEdit = Button(self.allRecipesCard, text = "Editar", width=7, command=partial(self.MainProgram_EditRecipe,self.globalRecipesDict["recipes"][i]["index"], page, filters))
                         self.allRecipesEdit.place(x = 520, y = 10)
-                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7)
+                        self.allRecipesRemove = Button(self.allRecipesCard, text = "Remover", width=7, command=partial(RemoveRecipe,self.globalRecipesDict["recipes"][i]["path"]))
                         self.allRecipesRemove.place(x = 520, y = 39)
                     else:
                         self.allRecipesSeeMore = Button(self.allRecipesCard, text = "Ver mais", command = partial(self.MainProgram_ShowRecipeDetails, self.globalRecipesDict["recipes"][i]["index"], self.globalRecipesDict["recipes"][i]["path"], "AllRecipes", filters))

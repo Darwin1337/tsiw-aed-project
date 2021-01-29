@@ -2361,15 +2361,6 @@ class Login:
         self.labelRegister.bind("<Enter>", partial(ChangeTextColor, self.labelRegister, "gray"))
         self.labelRegister.bind("<Leave>", partial(ChangeTextColor, self.labelRegister, "black"))
 
-        # ONLY FOR DEBUGGING - DELETE THIS
-        # ONLY FOR DEBUGGING - DELETE THIS
-        # ONLY FOR DEBUGGING - DELETE THIS
-        # ONLY FOR DEBUGGING - DELETE THIS
-        self.emailText.delete(0, END)
-        self.emailText.insert(0, "diogo@borges.pt")
-        self.passwordText.delete(0, END)
-        self.passwordText.insert(0, "diogo123")
-
     def UserLogin(self, event = None):
         try:
             app.loggedInUserInformation.clear()

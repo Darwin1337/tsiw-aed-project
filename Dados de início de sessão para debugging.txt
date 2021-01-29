@@ -1,0 +1,13 @@
+Dados de início de sessão para debugging:
+
+e-mail: diogo@borges.pt
+password: diogo123
+tipo: administrador
+
+e-mail: goncalo@gama.pt
+password: goncalo123
+tipo: utilizador
+
+e-mail: davide@silva.pt
+password: davide123
+tipo: utilizador
